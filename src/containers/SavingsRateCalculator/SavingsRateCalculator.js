@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 
 import { RegionDropdown } from 'react-country-region-selector';
 import axios from 'axios';
@@ -7,6 +7,11 @@ import axios from 'axios';
 import Container from '@material-ui/core/Container';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 
 function SavingsRateCalculator() {
   const [yearlyIncome, setYearlyIncome] = useState('');
@@ -20,6 +25,8 @@ function SavingsRateCalculator() {
   const [inputList, setInputList] = useState([
     { expenseName: '', expenseCost: 0 },
   ]);
+  const [dialogOpen, setDialogOpen] = useState(true);
+  const [activeStep, setActiveStep] = useState(0);
 
   const numberRegex = /^[0-9\b]+$/;
 
@@ -78,6 +85,25 @@ function SavingsRateCalculator() {
     setInputList([...inputList, { expenseName: '', expenseCost: 0 }]);
   };
 
+  const handleDialogOpen = () => {
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setActiveStep(0);
+    setDialogOpen(false);
+  };
+
+  const handleNextDialogStep = () => {
+    const updatedDialogStep = activeStep;
+    setActiveStep(updatedDialogStep + 1);
+  };
+
+  const handlePreviousDialogStep = () => {
+    const updatedDialogStep = activeStep;
+    setActiveStep(updatedDialogStep - 1);
+  };
+
   let totalContributions = 0;
   if (contribution401k) totalContributions += parseInt(contribution401k);
   if (contributionIRA) totalContributions += parseInt(contributionIRA);
@@ -102,12 +128,16 @@ function SavingsRateCalculator() {
         .then((response) => {
           setTaxData(response?.data?.annual);
           setLoading(false);
+          setDialogOpen(false);
         })
         .catch((error) => {
           console.error(error.message);
           setLoading(false);
         });
-    } else setLoading(false);
+    } else {
+      setLoading(false);
+      setDialogOpen(false);
+    }
   };
 
   let ficaTaxes,
@@ -124,34 +154,59 @@ function SavingsRateCalculator() {
     totalTakeSavingsRateCalculator = adjustedIncome - totalTaxes;
   }
 
-  return (
-    <Container>
-      <div>
-        <div
+  let stepDisplayed = (
+    <Fragment>
+      <DialogContent
+        style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
+      >
+        <DialogContentText>
+          Enter your yearly gross (pre-tax) income, your state, and your filing
+          status.
+        </DialogContentText>
+        <TextField
+          value={yearlyIncome}
+          onChange={handleYearlyIncomeChange}
+          placeholder="Enter your gross yearly income"
+          fullWidth
+          autoFocus
+          margin="normal"
+        />
+        <RegionDropdown
+          country="United States"
+          value={selectedState}
+          valueType="short"
+          defaultOptionLabel="Select State"
+          onChange={(val) => handleSelectedStateChange(val)}
+        />
+        <select value={filingStatus} onChange={handleFilingStatusChange}>
+          <option value="single">Single</option>
+          <option value="married">Married</option>
+          <option value="married_separately">Married Separately</option>
+          <option value="head_of_household">Head of Household</option>
+        </select>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleNextDialogStep}
+          disabled={!yearlyIncome || !selectedState}
+        >
+          Next
+        </Button>
+      </DialogActions>
+    </Fragment>
+  );
+
+  if (activeStep === 1) {
+    stepDisplayed = (
+      <Fragment>
+        <DialogContent
           style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
         >
-          <TextField
-            value={yearlyIncome}
-            onChange={handleYearlyIncomeChange}
-            placeholder="Enter your gross yearly income"
-          />
-          <RegionDropdown
-            country="United States"
-            value={selectedState}
-            valueType="short"
-            defaultOptionLabel="Select State"
-            onChange={(val) => handleSelectedStateChange(val)}
-          />
-          <select value={filingStatus} onChange={handleFilingStatusChange}>
-            <option value="single">Single</option>
-            <option value="married">Married</option>
-            <option value="married_separately">Married Separately</option>
-            <option value="head_of_household">Head of Household</option>
-          </select>
-        </div>
-        <div
-          style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
-        >
+          <DialogContentText>
+            Enter your yearly 401k, IRA, and HSA contributions.
+          </DialogContentText>
           <TextField
             value={contribution401k}
             onChange={handleContribution401kChange}
@@ -167,91 +222,147 @@ function SavingsRateCalculator() {
             onChange={handleContributionHSAChange}
             placeholder="Enter your yearly HSA contribution"
           />
-        </div>
-        <div>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handlePreviousDialogStep}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleNextDialogStep}
+          >
+            Next
+          </Button>
+        </DialogActions>
+      </Fragment>
+    );
+  }
+
+  if (activeStep === 2) {
+    stepDisplayed = (
+      <Fragment>
+        <DialogContent>
+          <DialogContentText>
+            Enter your yearly fixed expenses (housing, utilities, debt payments,
+            food, subscriptions, etc.)
+          </DialogContentText>
+          {inputList.map((expense, index) => {
+            return (
+              <div>
+                <TextField
+                  name="expenseName"
+                  placeholder="Enter Expense Name"
+                  value={expense.expenseName}
+                  onChange={(event) => handleInputListChange(event, index)}
+                  margin="normal"
+                />
+                <TextField
+                  name="expenseCost"
+                  placeholder="Enter Yearly Expense Cost"
+                  value={expense.expenseCost}
+                  onChange={(event) => handleInputListChange(event, index)}
+                  margin="normal"
+                />
+                {inputList.length !== 1 && (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => handleRemoveClick(index)}
+                  >
+                    Remove
+                  </Button>
+                )}
+                {inputList.length - 1 === index && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAddClick}
+                  >
+                    Add
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handlePreviousDialogStep}
+          >
+            Previous
+          </Button>
           <Button
             variant="contained"
             color="primary"
             onClick={calculateTaxRates}
             disabled={!selectedState || !yearlyIncome}
           >
-            Calculate Tax Rates
+            Estimate Tax Rates and Potential Savings Rate
           </Button>
-        </div>
-      </div>
-      <div>
-        <h3>Add Yearly Fixed Expenses</h3>
-        {inputList.map((expense, index) => {
-          return (
+        </DialogActions>
+      </Fragment>
+    );
+  }
+
+  return (
+    <Container>
+      <Dialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        aria-labelledby="form-dialog-title"
+      >
+        {stepDisplayed}
+      </Dialog>
+      {!dialogOpen ? (
+        <div style={{ paddingTop: '70px' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleDialogOpen}
+          >
+            Change Income, Contribution, or Expense Information
+          </Button>
+          <div>Gross Yearly Income = ${yearlyIncome}</div>
+          {taxData ? (
             <div>
-              <TextField
-                name="expenseName"
-                placeholder="Enter Expense Name"
-                value={expense.expenseName}
-                onChange={(event) => handleInputListChange(event, index)}
-              />
-              <TextField
-                name="expenseCost"
-                placeholder="Enter Yearly Expense Cost"
-                value={expense.expenseCost}
-                onChange={(event) => handleInputListChange(event, index)}
-              />
-              {inputList.length !== 1 && (
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => handleRemoveClick(index)}
-                >
-                  Remove
-                </Button>
+              <div>Federal = ${federalTaxes}</div>
+              <div>FICA = ${ficaTaxes}</div>
+              {stateTaxes ? (
+                <div>State = ${stateTaxes}</div>
+              ) : (
+                <div>No State Taxes in {selectedState}</div>
               )}
-              {inputList.length - 1 === index && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleAddClick}
-                >
-                  Add
-                </Button>
-              )}
+              <div>Total Yearly Income Tax = ${totalTaxes.toFixed(2)}</div>
+              <div>
+                Total Yearly Take Home = $
+                {totalTakeSavingsRateCalculator.toFixed(2)}
+              </div>
+              <div>
+                Total Yearly Retirement Contributions = ${totalContributions}
+              </div>
+              <div>
+                Effective Income Tax Rate ={' '}
+                {(totalTaxes / yearlyIncome).toFixed(2) * 100}%
+              </div>
             </div>
-          );
-        })}
-      </div>
-      <div style={{ paddingTop: '70px' }}>
-        <div>Gross Yearly Income = {yearlyIncome}</div>
-        {taxData ? (
+          ) : loading ? (
+            <div>Loading...</div>
+          ) : null}
           <div>
-            <div>Federal = ${federalTaxes}</div>
-            <div>FICA = ${ficaTaxes}</div>
-            {stateTaxes ? (
-              <div>State = ${stateTaxes}</div>
-            ) : (
-              <div>No State Taxes in {selectedState}</div>
-            )}
-            <div>Total Yearly Income Tax = ${totalTaxes}</div>
-            <div>
-              Total Yearly Take SavingsRateCalculator = $
-              {totalTakeSavingsRateCalculator}
-            </div>
-            <div>
-              Total Yearly Retirement Contributions = ${totalContributions}
-            </div>
-            <div>
-              Effective Income Tax Rate ={' '}
-              {(totalTaxes / yearlyIncome).toFixed(2) * 100}%
-            </div>
+            Yearly Fixed Expenses = $
+            {inputList.reduce((accumulator, currentValue) => {
+              return accumulator + parseInt(currentValue.expenseCost);
+            }, 0)}
           </div>
-        ) : loading ? (
-          <div>Loading...</div>
-        ) : null}
-        <div>
-          Yearly Fixed Expenses = $
-          {inputList.reduce((accumulator, currentValue) => {
-            return accumulator + parseInt(currentValue.expenseCost);
-          }, 0)}
         </div>
-      </div>
+      ) : null}
     </Container>
   );
 }

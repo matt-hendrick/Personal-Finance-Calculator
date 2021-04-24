@@ -171,10 +171,7 @@ function TaxRateCalculator() {
               <div>No State Taxes in {selectedState}</div>
             )}
             <div>Total Yearly Income Tax = ${totalTaxes}</div>
-            <div>
-              Total Yearly Take TaxRateCalculator = $
-              {totalTakeTaxRateCalculator}
-            </div>
+            <div>Total Yearly Take Home = ${totalTakeTaxRateCalculator}</div>
             <div>
               Total Yearly Retirement Contributions = ${totalContributions}
             </div>
