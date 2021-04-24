@@ -1,9 +1,14 @@
-import Home from './containers/Home/Home';
+// Components
+import Navbar from './components/Navbar/Navbar';
+import TaxRateCalculator from './containers/TaxRateCalculator/TaxRateCalculator';
+import SavingsRateCalculator from './containers/SavingsRateCalculator/SavingsRateCalculator';
 
 function App() {
   return (
     <div>
-      <Home />
+      <Navbar />
+      <SavingsRateCalculator />
+      {/* <TaxRateCalculator /> */}
     </div>
   );
 }
