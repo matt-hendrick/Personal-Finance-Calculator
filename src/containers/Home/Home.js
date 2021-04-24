@@ -30,16 +30,19 @@ function Home() {
   const calculateTaxRates = () => {
     const params = {
       pay_rate: yearlyIncome,
-      filing_state: filingStatus,
+      filing_status: filingStatus,
       state: selectedState,
     };
     if (yearlyIncome && selectedState) {
       axios
-        .get('/TaxRates', {
-          params: params,
-        })
+        .get(
+          'http://localhost:5000/personalfinancecalculator/us-central1/app/TaxRates',
+          {
+            params: params,
+          }
+        )
         .then((response) => {
-          setTaxData(response);
+          setTaxData(response?.data?.annual);
         })
         .catch((error) => {
           console.error(error.message);
@@ -50,34 +53,50 @@ function Home() {
   if (taxData) console.log(taxData);
 
   return (
-    <div>
-      <input
-        value={yearlyIncome}
-        onChange={handleYearlyIncomeChange}
-        placeholder="Enter your gross yearly income"
-      />
-      <RegionDropdown
-        country="United States"
-        value={selectedState}
-        valueType="short"
-        defaultOptionLabel="Select State"
-        onChange={(val) => handleSelectedStateChange(val)}
-      />
-      <select value={filingStatus} onChange={handleFilingStatusChange}>
-        <option value="single">Single</option>
-        <option value="married">Married</option>
-        <option value="married_separately">Married Separately</option>
-        <option value="head_of_household">Head of Household</option>
-      </select>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+      }}
+    >
       <div>
-        <button
-          onClick={calculateTaxRates}
-          disabled={!selectedState || !yearlyIncome}
-        >
-          Calculate Tax Rates
-        </button>
+        <input
+          value={yearlyIncome}
+          onChange={handleYearlyIncomeChange}
+          placeholder="Enter your gross yearly income"
+        />
+        <RegionDropdown
+          country="United States"
+          value={selectedState}
+          valueType="short"
+          defaultOptionLabel="Select State"
+          onChange={(val) => handleSelectedStateChange(val)}
+        />
+        <select value={filingStatus} onChange={handleFilingStatusChange}>
+          <option value="single">Single</option>
+          <option value="married">Married</option>
+          <option value="married_separately">Married Separately</option>
+          <option value="head_of_household">Head of Household</option>
+        </select>
+        <div>
+          <button
+            onClick={calculateTaxRates}
+            disabled={!selectedState || !yearlyIncome}
+          >
+            Calculate Tax Rates
+          </button>
+        </div>
       </div>
-      <div>Gross Yearly Income = {yearlyIncome}</div>
+      <div>
+        <div>Gross Yearly Income = {yearlyIncome}</div>
+        {taxData ? (
+          <div>
+            <div>FICA = {taxData.fica.amount}</div>
+            <div>Federal = {taxData.federal.amount}</div>
+            <div>State = {taxData.state.amount}</div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
