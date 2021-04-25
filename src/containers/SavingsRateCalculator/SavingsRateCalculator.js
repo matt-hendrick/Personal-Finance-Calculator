@@ -13,6 +13,13 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
 
 function SavingsRateCalculator() {
   const [yearlyIncome, setYearlyIncome] = useState('');
@@ -344,7 +351,7 @@ function SavingsRateCalculator() {
         <DialogTitle>Enter Your Information</DialogTitle>
         {stepDisplayed}
       </Dialog>
-      {!dialogOpen ? (
+      {!dialogOpen && taxData ? (
         <div style={{ paddingTop: '70px', textAlign: 'center' }}>
           <Button
             variant="contained"
@@ -353,49 +360,131 @@ function SavingsRateCalculator() {
           >
             Change Income, Contribution, or Expense Information
           </Button>
-          <div>Gross Yearly Income = ${parseInt(yearlyIncome).toFixed(2)}</div>
-          {taxData ? (
-            <div>
-              <div>Federal = ${federalTaxes.toFixed(2)}</div>
-              <div>FICA = ${ficaTaxes.toFixed(2)}</div>
-              {stateTaxes ? (
-                <div>State = ${stateTaxes.toFixed(2)}</div>
-              ) : (
-                <div>No State Taxes in {selectedState}</div>
-              )}
-              <div>Total Yearly Income Tax = ${totalTaxes.toFixed(2)}</div>
-              <div>Total Yearly Take Home = ${totalTakeHome.toFixed(2)}</div>
-              <div>
-                Total Yearly Retirement Contributions = $
-                {parseInt(totalContributions).toFixed(2)}
-              </div>
-              <div>
-                Effective Income Tax Rate ={' '}
-                {(totalTaxes / yearlyIncome).toFixed(2) * 100}%
-              </div>
-            </div>
-          ) : null}
-          <div>Yearly Fixed Expenses = ${totalFixedExpenses.toFixed(2)}</div>
-          <div>
-            Yearly Take Home After Fixed Expenses = $
-            {(totalTakeHome - totalFixedExpenses).toFixed(2)}
-          </div>
-          <div>
-            Max Potential Savings Rate of After Tax Income (Take Home - Fixed
-            Expense) Excluding Retirement Contributions ={' '}
-            {((totalTakeHome - totalFixedExpenses) / totalTakeHome).toFixed(2) *
-              100}
-            %
-          </div>
-          <div>
-            Max Potential Savings Rate of After Tax Income (Take Home - Fixed
-            Expense) Including Retirement Contributions ={' '}
-            {(
-              (totalTakeHome - totalFixedExpenses + totalContributions) /
-              (totalTakeHome + totalContributions)
-            ).toFixed(2) * 100}
-            %
-          </div>
+          <TableContainer component={Paper}>
+            <Table aria-label="simple table">
+              {/* <TableHead>
+                <TableRow>
+                  <TableCell>Thing</TableCell>
+                  <TableCell align="right">#s</TableCell>
+                </TableRow>
+              </TableHead> */}
+              <TableBody>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Gross Yearly Income
+                  </TableCell>
+                  <TableCell align="right">
+                    ${parseInt(yearlyIncome).toFixed(2)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Federal
+                  </TableCell>
+                  <TableCell align="right">
+                    ${federalTaxes.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    FICA
+                  </TableCell>
+                  <TableCell align="right">${ficaTaxes.toFixed(2)}</TableCell>
+                </TableRow>
+                {stateTaxes ? (
+                  <TableRow>
+                    <TableCell component="th" scope="row">
+                      State
+                    </TableCell>
+                    <TableCell align="right">
+                      ${stateTaxes.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow>
+                    <TableCell component="th" scope="row">
+                      No State Taxes in {selectedState}
+                    </TableCell>
+                    <TableCell align="right">$0</TableCell>
+                  </TableRow>
+                )}
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Total Yearly Income Tax
+                  </TableCell>
+                  <TableCell align="right">${totalTaxes.toFixed(2)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Total Yearly Take Home
+                  </TableCell>
+                  <TableCell align="right">
+                    ${totalTakeHome.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Total Yearly Retirement Contributions
+                  </TableCell>
+                  <TableCell align="right">
+                    ${parseInt(totalContributions).toFixed(2)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Effective Income Tax Rate
+                  </TableCell>
+                  <TableCell align="right">
+                    {(totalTaxes / yearlyIncome).toFixed(2) * 100}%
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Yearly Fixed Expenses
+                  </TableCell>
+                  <TableCell align="right">
+                    ${totalFixedExpenses.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Yearly Take Home After Fixed Expenses
+                  </TableCell>
+                  <TableCell align="right">
+                    ${(totalTakeHome - totalFixedExpenses).toFixed(2)}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Max Potential Savings Rate of After Tax Income (Take Home -
+                    Fixed Expense) Excluding Retirement Contributions
+                  </TableCell>
+                  <TableCell align="right">
+                    {(
+                      (totalTakeHome - totalFixedExpenses) /
+                      totalTakeHome
+                    ).toFixed(2) * 100}
+                    %
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Max Potential Savings Rate of After Tax Income (Take Home -
+                    Fixed Expense) Including Retirement Contributions
+                  </TableCell>
+                  <TableCell align="right">
+                    {(
+                      (totalTakeHome -
+                        totalFixedExpenses +
+                        totalContributions) /
+                      (totalTakeHome + totalContributions)
+                    ).toFixed(2) * 100}
+                    %
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
         </div>
       ) : loading ? (
         <LinearProgress style={{ marginTop: '100px' }} />
