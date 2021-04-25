@@ -15,11 +15,11 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
+
+// Components
+import MyTableRow from '../../components/MyTableRow/MyTableRow';
 
 function SavingsRateCalculator() {
   const [yearlyIncome, setYearlyIncome] = useState('');
@@ -30,6 +30,9 @@ function SavingsRateCalculator() {
   const [contribution401k, setContribution401k] = useState('');
   const [contributionIRA, setContributionIRA] = useState('');
   const [contributionHSA, setContributionHSA] = useState('');
+  const [employerContribution401k, setEmployerContribution401k] = useState('');
+  const [employerContributionIRA, setEmployerContributionIRA] = useState('');
+  const [employerContributionHSA, setEmployerContributionHSA] = useState('');
   const [inputList, setInputList] = useState([
     { expenseName: '', expenseCost: 0 },
   ]);
@@ -74,6 +77,27 @@ function SavingsRateCalculator() {
     if (event.target.value === '' || numberRegex.test(event.target.value)) {
       const updatedContributionHSA = event.target.value;
       setContributionHSA(updatedContributionHSA);
+    } else return;
+  };
+
+  const handleEmployerContribution401kChange = (event) => {
+    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+      const updatedEmployerContribution401k = event.target.value;
+      setEmployerContribution401k(updatedEmployerContribution401k);
+    } else return;
+  };
+
+  const handleEmployerContributionIRAChange = (event) => {
+    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+      const updatedEmployerContributionIRA = event.target.value;
+      setEmployerContributionIRA(updatedEmployerContributionIRA);
+    } else return;
+  };
+
+  const handleEmployerContributionHSAChange = (event) => {
+    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+      const updatedEmployerContributionHSA = event.target.value;
+      setEmployerContributionHSA(updatedEmployerContributionHSA);
     } else return;
   };
 
@@ -126,6 +150,12 @@ function SavingsRateCalculator() {
   if (contributionIRA) totalContributions += parseInt(contributionIRA);
   if (contributionHSA) totalContributions += parseInt(contributionHSA);
   const adjustedIncome = yearlyIncome - parseInt(totalContributions);
+  if (employerContribution401k)
+    totalContributions += parseInt(employerContribution401k);
+  if (employerContributionIRA)
+    totalContributions += parseInt(employerContributionIRA);
+  if (employerContributionHSA)
+    totalContributions += parseInt(employerContributionHSA);
 
   const calculateTaxRates = () => {
     setLoading(true);
@@ -235,22 +265,22 @@ function SavingsRateCalculator() {
           style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
         >
           <DialogContentText>
-            Enter your yearly 401k, IRA, and HSA contributions.
+            Enter your personal yearly 401k, IRA, and HSA contributions.
           </DialogContentText>
           <TextField
             value={contribution401k}
             onChange={handleContribution401kChange}
-            placeholder="Enter your yearly personal 401k contribution"
+            placeholder="Enter your personal yearly 401k contribution"
           />
           <TextField
             value={contributionIRA}
             onChange={handleContributionIRAChange}
-            placeholder="Enter your yearly IRA contribution"
+            placeholder="Enter your personal yearly IRA contribution"
           />
           <TextField
             value={contributionHSA}
             onChange={handleContributionHSAChange}
-            placeholder="Enter your yearly HSA contribution"
+            placeholder="Enter your personal yearly HSA contribution"
           />
         </DialogContent>
         <DialogActions>
@@ -274,6 +304,51 @@ function SavingsRateCalculator() {
   }
 
   if (activeStep === 2) {
+    stepDisplayed = (
+      <Fragment>
+        <DialogContent
+          style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
+        >
+          <DialogContentText>
+            Enter your employer's yearly 401k, IRA, and HSA contributions.
+          </DialogContentText>
+          <TextField
+            value={employerContribution401k}
+            onChange={handleEmployerContribution401kChange}
+            placeholder="Enter your employer's yearly 401k contribution"
+          />
+          <TextField
+            value={employerContributionIRA}
+            onChange={handleEmployerContributionIRAChange}
+            placeholder="Enter your employer's yearly IRA contribution"
+          />
+          <TextField
+            value={employerContributionHSA}
+            onChange={handleEmployerContributionHSAChange}
+            placeholder="Enter your employer's yearly HSA contribution"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handlePreviousDialogStep}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleNextDialogStep}
+          >
+            Next
+          </Button>
+        </DialogActions>
+      </Fragment>
+    );
+  }
+
+  if (activeStep === 3) {
     stepDisplayed = (
       <Fragment>
         <DialogContent>
@@ -351,137 +426,100 @@ function SavingsRateCalculator() {
         <DialogTitle>Enter Your Information</DialogTitle>
         {stepDisplayed}
       </Dialog>
+      {!dialogOpen ? (
+        <Button variant="contained" color="primary" onClick={handleDialogOpen}>
+          Change Income, Contribution, or Expense Information
+        </Button>
+      ) : null}
       {!dialogOpen && taxData ? (
         <div style={{ paddingTop: '70px', textAlign: 'center' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleDialogOpen}
-          >
-            Change Income, Contribution, or Expense Information
-          </Button>
           <TableContainer component={Paper}>
             <Table aria-label="simple table">
-              {/* <TableHead>
-                <TableRow>
-                  <TableCell>Thing</TableCell>
-                  <TableCell align="right">#s</TableCell>
-                </TableRow>
-              </TableHead> */}
               <TableBody>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Gross Yearly Income
-                  </TableCell>
-                  <TableCell align="right">
-                    ${parseInt(yearlyIncome).toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Federal
-                  </TableCell>
-                  <TableCell align="right">
-                    ${federalTaxes.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    FICA
-                  </TableCell>
-                  <TableCell align="right">${ficaTaxes.toFixed(2)}</TableCell>
-                </TableRow>
+                <MyTableRow
+                  cellTitle="Gross Yearly Income"
+                  cellNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
+                />
+                <MyTableRow
+                  cellTitle="Federal"
+                  cellNumber={`$${federalTaxes.toFixed(2)}`}
+                />
+                <MyTableRow
+                  cellTitle="FICA"
+                  cellNumber={`$${ficaTaxes.toFixed(2)}`}
+                />
                 {stateTaxes ? (
-                  <TableRow>
-                    <TableCell component="th" scope="row">
-                      State
-                    </TableCell>
-                    <TableCell align="right">
-                      ${stateTaxes.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
+                  <MyTableRow
+                    cellTitle="State"
+                    cellNumber={`$${stateTaxes.toFixed(2)}`}
+                  />
                 ) : (
-                  <TableRow>
-                    <TableCell component="th" scope="row">
-                      No State Taxes in {selectedState}
-                    </TableCell>
-                    <TableCell align="right">$0</TableCell>
-                  </TableRow>
+                  <MyTableRow
+                    cellTitle={`No State Taxes in ${selectedState}`}
+                    cellNumber="$0"
+                  />
                 )}
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Total Yearly Income Tax
-                  </TableCell>
-                  <TableCell align="right">${totalTaxes.toFixed(2)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Total Yearly Take Home
-                  </TableCell>
-                  <TableCell align="right">
-                    ${totalTakeHome.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Total Yearly Retirement Contributions
-                  </TableCell>
-                  <TableCell align="right">
-                    ${parseInt(totalContributions).toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Effective Income Tax Rate
-                  </TableCell>
-                  <TableCell align="right">
-                    {(totalTaxes / yearlyIncome).toFixed(2) * 100}%
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Yearly Fixed Expenses
-                  </TableCell>
-                  <TableCell align="right">
-                    ${totalFixedExpenses.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Yearly Take Home After Fixed Expenses
-                  </TableCell>
-                  <TableCell align="right">
-                    ${(totalTakeHome - totalFixedExpenses).toFixed(2)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Max Potential Savings Rate of After Tax Income (Take Home -
-                    Fixed Expense) Excluding Retirement Contributions
-                  </TableCell>
-                  <TableCell align="right">
-                    {(
-                      (totalTakeHome - totalFixedExpenses) /
-                      totalTakeHome
-                    ).toFixed(2) * 100}
-                    %
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell component="th" scope="row">
-                    Max Potential Savings Rate of After Tax Income (Take Home -
-                    Fixed Expense) Including Retirement Contributions
-                  </TableCell>
-                  <TableCell align="right">
-                    {(
-                      (totalTakeHome -
-                        totalFixedExpenses +
-                        totalContributions) /
-                      (totalTakeHome + totalContributions)
-                    ).toFixed(2) * 100}
-                    %
-                  </TableCell>
-                </TableRow>
+                <MyTableRow
+                  cellTitle="Total Yearly Income Tax"
+                  cellNumber={`$${totalTaxes.toFixed(2)}`}
+                />
+                <MyTableRow
+                  cellTitle="Effective Income Tax Rate"
+                  cellNumber={`${((totalTaxes / yearlyIncome) * 100).toFixed(
+                    2
+                  )}%`}
+                />
+                <MyTableRow
+                  cellTitle="Total Yearly Take Home (Pre-Fixed Expenses)"
+                  cellNumber={`$${totalTakeHome.toFixed(2)}`}
+                />
+                <MyTableRow
+                  cellTitle="Total Yearly Retirement Contributions"
+                  cellNumber={`$${parseInt(totalContributions).toFixed(2)}`}
+                />
+                <MyTableRow
+                  cellTitle="Yearly Take Home (Pre-Fixed Expenses) plus Retirement Contributions"
+                  cellNumber={`$${(totalTakeHome + totalContributions).toFixed(
+                    2
+                  )}`}
+                />
+                <MyTableRow
+                  cellTitle="Yearly Fixed Expenses"
+                  cellNumber={`$${totalFixedExpenses.toFixed(2)}`}
+                />
+                <MyTableRow
+                  cellTitle="Yearly Take Home After
+                  Fixed Expenses (Excluding Retirement Contributions) "
+                  cellNumber={`$${(totalTakeHome - totalFixedExpenses).toFixed(
+                    2
+                  )}`}
+                />
+                <MyTableRow
+                  cellTitle="Yearly Take Home After
+                  Fixed Expenses (Including Retirement Contributions) "
+                  cellNumber={`$${(
+                    totalTakeHome -
+                    totalFixedExpenses +
+                    totalContributions
+                  ).toFixed(2)}`}
+                />
+                <MyTableRow
+                  cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Excluding Retirement Contributions)"
+                  cellNumber={`${(
+                    ((totalTakeHome - totalFixedExpenses) / totalTakeHome) *
+                    100
+                  ).toFixed(2)}
+                  %`}
+                />
+                <MyTableRow
+                  cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Including Retirement Contributions)"
+                  cellNumber={`${(
+                    ((totalTakeHome - totalFixedExpenses + totalContributions) /
+                      (totalTakeHome + totalContributions)) *
+                    100
+                  ).toFixed(2)}
+                  %`}
+                />
               </TableBody>
             </Table>
           </TableContainer>
