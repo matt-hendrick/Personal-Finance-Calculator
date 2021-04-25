@@ -12,10 +12,11 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 function SavingsRateCalculator() {
   const [yearlyIncome, setYearlyIncome] = useState('');
-  const [selectedState, setSelectedState] = useState(null);
+  const [selectedState, setSelectedState] = useState('');
   const [filingStatus, setFilingStatus] = useState('single');
   const [taxData, setTaxData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,7 @@ function SavingsRateCalculator() {
   ]);
   const [dialogOpen, setDialogOpen] = useState(true);
   const [activeStep, setActiveStep] = useState(0);
+  const [totalFixedExpenses, setTotalFixedExpenses] = useState(0);
 
   const numberRegex = /^[0-9\b]+$/;
 
@@ -104,6 +106,14 @@ function SavingsRateCalculator() {
     setActiveStep(updatedDialogStep - 1);
   };
 
+  const calculateTotalFixedExpenses = () => {
+    setTotalFixedExpenses(
+      inputList.reduce((accumulator, currentValue) => {
+        return accumulator + parseInt(currentValue.expenseCost);
+      }, 0)
+    );
+  };
+
   let totalContributions = 0;
   if (contribution401k) totalContributions += parseInt(contribution401k);
   if (contributionIRA) totalContributions += parseInt(contributionIRA);
@@ -120,13 +130,14 @@ function SavingsRateCalculator() {
     if (yearlyIncome && selectedState) {
       axios
         .get(
-          'http://localhost:5001/personalfinancecalculator/us-central1/app/TaxRates',
+          'http://localhost:5000/personalfinancecalculator/us-central1/app/TaxRates',
           {
             params: params,
           }
         )
         .then((response) => {
           setTaxData(response?.data?.annual);
+          calculateTotalFixedExpenses();
           setLoading(false);
           setDialogOpen(false);
         })
@@ -140,18 +151,14 @@ function SavingsRateCalculator() {
     }
   };
 
-  let ficaTaxes,
-    federalTaxes,
-    stateTaxes,
-    totalTaxes,
-    totalTakeSavingsRateCalculator;
+  let ficaTaxes, federalTaxes, stateTaxes, totalTaxes, totalTakeHome;
   if (taxData) {
     ficaTaxes = taxData.fica.amount;
     federalTaxes = taxData.federal.amount;
     stateTaxes = taxData.state.amount;
     totalTaxes =
       taxData.fica.amount + taxData.federal.amount + taxData.state.amount;
-    totalTakeSavingsRateCalculator = adjustedIncome - totalTaxes;
+    totalTakeHome = adjustedIncome - totalTaxes;
   }
 
   let stepDisplayed = (
@@ -177,6 +184,22 @@ function SavingsRateCalculator() {
           valueType="short"
           defaultOptionLabel="Select State"
           onChange={(val) => handleSelectedStateChange(val)}
+          blacklist={{
+            US: [
+              'AS',
+              'FM',
+              'GU',
+              'MH',
+              'MP',
+              'PW',
+              'PR',
+              'VI',
+              'UM',
+              'AA',
+              'AE',
+              'AP',
+            ],
+          }}
         />
         <select value={filingStatus} onChange={handleFilingStatusChange}>
           <option value="single">Single</option>
@@ -249,7 +272,7 @@ function SavingsRateCalculator() {
         <DialogContent>
           <DialogContentText>
             Enter your yearly fixed expenses (housing, utilities, debt payments,
-            food, subscriptions, etc.)
+            food, transportation, subscriptions, etc.)
           </DialogContentText>
           {inputList.map((expense, index) => {
             return (
@@ -318,10 +341,11 @@ function SavingsRateCalculator() {
         onClose={handleDialogClose}
         aria-labelledby="form-dialog-title"
       >
+        <DialogTitle>Enter Your Information</DialogTitle>
         {stepDisplayed}
       </Dialog>
       {!dialogOpen ? (
-        <div style={{ paddingTop: '70px' }}>
+        <div style={{ paddingTop: '70px', textAlign: 'center' }}>
           <Button
             variant="contained"
             color="primary"
@@ -329,39 +353,52 @@ function SavingsRateCalculator() {
           >
             Change Income, Contribution, or Expense Information
           </Button>
-          <div>Gross Yearly Income = ${yearlyIncome}</div>
+          <div>Gross Yearly Income = ${parseInt(yearlyIncome).toFixed(2)}</div>
           {taxData ? (
             <div>
-              <div>Federal = ${federalTaxes}</div>
-              <div>FICA = ${ficaTaxes}</div>
+              <div>Federal = ${federalTaxes.toFixed(2)}</div>
+              <div>FICA = ${ficaTaxes.toFixed(2)}</div>
               {stateTaxes ? (
-                <div>State = ${stateTaxes}</div>
+                <div>State = ${stateTaxes.toFixed(2)}</div>
               ) : (
                 <div>No State Taxes in {selectedState}</div>
               )}
               <div>Total Yearly Income Tax = ${totalTaxes.toFixed(2)}</div>
+              <div>Total Yearly Take Home = ${totalTakeHome.toFixed(2)}</div>
               <div>
-                Total Yearly Take Home = $
-                {totalTakeSavingsRateCalculator.toFixed(2)}
-              </div>
-              <div>
-                Total Yearly Retirement Contributions = ${totalContributions}
+                Total Yearly Retirement Contributions = $
+                {parseInt(totalContributions).toFixed(2)}
               </div>
               <div>
                 Effective Income Tax Rate ={' '}
                 {(totalTaxes / yearlyIncome).toFixed(2) * 100}%
               </div>
             </div>
-          ) : loading ? (
-            <div>Loading...</div>
           ) : null}
+          <div>Yearly Fixed Expenses = ${totalFixedExpenses.toFixed(2)}</div>
           <div>
-            Yearly Fixed Expenses = $
-            {inputList.reduce((accumulator, currentValue) => {
-              return accumulator + parseInt(currentValue.expenseCost);
-            }, 0)}
+            Yearly Take Home After Fixed Expenses = $
+            {(totalTakeHome - totalFixedExpenses).toFixed(2)}
+          </div>
+          <div>
+            Max Potential Savings Rate of After Tax Income (Take Home - Fixed
+            Expense) Excluding Retirement Contributions ={' '}
+            {((totalTakeHome - totalFixedExpenses) / totalTakeHome).toFixed(2) *
+              100}
+            %
+          </div>
+          <div>
+            Max Potential Savings Rate of After Tax Income (Take Home - Fixed
+            Expense) Including Retirement Contributions ={' '}
+            {(
+              (totalTakeHome - totalFixedExpenses + totalContributions) /
+              (totalTakeHome + totalContributions)
+            ).toFixed(2) * 100}
+            %
           </div>
         </div>
+      ) : loading ? (
+        <LinearProgress style={{ marginTop: '100px' }} />
       ) : null}
     </Container>
   );

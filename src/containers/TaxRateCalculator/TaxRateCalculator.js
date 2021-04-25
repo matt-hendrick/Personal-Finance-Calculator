@@ -90,18 +90,14 @@ function TaxRateCalculator() {
     } else setLoading(false);
   };
 
-  let ficaTaxes,
-    federalTaxes,
-    stateTaxes,
-    totalTaxes,
-    totalTakeTaxRateCalculator;
+  let ficaTaxes, federalTaxes, stateTaxes, totalTaxes, totalTakeHome;
   if (taxData) {
     ficaTaxes = taxData.fica.amount;
     federalTaxes = taxData.federal.amount;
     stateTaxes = taxData.state.amount;
     totalTaxes =
       taxData.fica.amount + taxData.federal.amount + taxData.state.amount;
-    totalTakeTaxRateCalculator = adjustedIncome - totalTaxes;
+    totalTakeHome = adjustedIncome - totalTaxes;
   }
 
   return (
@@ -171,7 +167,7 @@ function TaxRateCalculator() {
               <div>No State Taxes in {selectedState}</div>
             )}
             <div>Total Yearly Income Tax = ${totalTaxes}</div>
-            <div>Total Yearly Take Home = ${totalTakeTaxRateCalculator}</div>
+            <div>Total Yearly Take Home = ${totalTakeHome}</div>
             <div>
               Total Yearly Retirement Contributions = ${totalContributions}
             </div>
