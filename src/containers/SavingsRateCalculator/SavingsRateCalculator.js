@@ -31,7 +31,6 @@ function SavingsRateCalculator() {
   const [contributionIRA, setContributionIRA] = useState('');
   const [contributionHSA, setContributionHSA] = useState('');
   const [employerContribution401k, setEmployerContribution401k] = useState('');
-  const [employerContributionIRA, setEmployerContributionIRA] = useState('');
   const [employerContributionHSA, setEmployerContributionHSA] = useState('');
   const [inputList, setInputList] = useState([
     { expenseName: '', expenseCost: 0 },
@@ -60,21 +59,33 @@ function SavingsRateCalculator() {
   };
 
   const handleContribution401kChange = (event) => {
-    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+    if (
+      event.target.value === '' ||
+      (numberRegex.test(event.target.value) &&
+        parseInt(event.target.value) <= 26500)
+    ) {
       const updatedContribution401k = event.target.value;
       setContribution401k(updatedContribution401k);
     } else return;
   };
 
   const handleContributionIRAChange = (event) => {
-    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+    if (
+      event.target.value === '' ||
+      (numberRegex.test(event.target.value) &&
+        parseInt(event.target.value) <= 7000)
+    ) {
       const updatedContributionIRA = event.target.value;
       setContributionIRA(updatedContributionIRA);
     } else return;
   };
 
   const handleContributionHSAChange = (event) => {
-    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+    if (
+      event.target.value === '' ||
+      (numberRegex.test(event.target.value) &&
+        parseInt(event.target.value) <= 7100)
+    ) {
       const updatedContributionHSA = event.target.value;
       setContributionHSA(updatedContributionHSA);
     } else return;
@@ -84,13 +95,6 @@ function SavingsRateCalculator() {
     if (event.target.value === '' || numberRegex.test(event.target.value)) {
       const updatedEmployerContribution401k = event.target.value;
       setEmployerContribution401k(updatedEmployerContribution401k);
-    } else return;
-  };
-
-  const handleEmployerContributionIRAChange = (event) => {
-    if (event.target.value === '' || numberRegex.test(event.target.value)) {
-      const updatedEmployerContributionIRA = event.target.value;
-      setEmployerContributionIRA(updatedEmployerContributionIRA);
     } else return;
   };
 
@@ -152,8 +156,7 @@ function SavingsRateCalculator() {
   const adjustedIncome = yearlyIncome - parseInt(totalContributions);
   if (employerContribution401k)
     totalContributions += parseInt(employerContribution401k);
-  if (employerContributionIRA)
-    totalContributions += parseInt(employerContributionIRA);
+
   if (employerContributionHSA)
     totalContributions += parseInt(employerContributionHSA);
 
@@ -203,10 +206,10 @@ function SavingsRateCalculator() {
       <DialogContent
         style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
       >
-        <DialogContentText>
+        <DialogTitle>
           Enter your yearly gross (pre-tax) income, your state, and your filing
           status.
-        </DialogContentText>
+        </DialogTitle>
         <TextField
           value={yearlyIncome}
           onChange={handleYearlyIncomeChange}
@@ -264,9 +267,9 @@ function SavingsRateCalculator() {
         <DialogContent
           style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
         >
-          <DialogContentText>
+          <DialogTitle>
             Enter your personal yearly 401k, IRA, and HSA contributions.
-          </DialogContentText>
+          </DialogTitle>
           <TextField
             value={contribution401k}
             onChange={handleContribution401kChange}
@@ -282,6 +285,18 @@ function SavingsRateCalculator() {
             onChange={handleContributionHSAChange}
             placeholder="Enter your personal yearly HSA contribution"
           />
+          <DialogContentText>
+            If under 50, the 401k yearly personal contribution cap is $19,500
+            and the IRA cap is $6,000.
+          </DialogContentText>
+          <DialogContentText>
+            If over 50, the 401k yearly personal contribution cap is $26,000 and
+            the IRA cap is $7,000.
+          </DialogContentText>
+          <DialogContentText>
+            Combined personal-employer HSA yearly contributions are limited to
+            $3,550 (self-only) and $7,100 (family).
+          </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button
@@ -309,24 +324,28 @@ function SavingsRateCalculator() {
         <DialogContent
           style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
         >
-          <DialogContentText>
+          <DialogTitle>
             Enter your employer's yearly 401k, IRA, and HSA contributions.
-          </DialogContentText>
+          </DialogTitle>
           <TextField
             value={employerContribution401k}
             onChange={handleEmployerContribution401kChange}
             placeholder="Enter your employer's yearly 401k contribution"
           />
-          <TextField
-            value={employerContributionIRA}
-            onChange={handleEmployerContributionIRAChange}
-            placeholder="Enter your employer's yearly IRA contribution"
-          />
+
           <TextField
             value={employerContributionHSA}
             onChange={handleEmployerContributionHSAChange}
             placeholder="Enter your employer's yearly HSA contribution"
           />
+          <DialogContentText>
+            The maximum employer 401k contribution in 2020 is $37,500.
+          </DialogContentText>
+
+          <DialogContentText>
+            Combined personal-employer HSA yearly contributions are limited to
+            $3,550 (self-only) and $7,100 (family).
+          </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button
@@ -352,10 +371,10 @@ function SavingsRateCalculator() {
     stepDisplayed = (
       <Fragment>
         <DialogContent>
-          <DialogContentText>
+          <DialogTitle>
             Enter your yearly fixed expenses (housing, utilities, debt payments,
             food, transportation, subscriptions, etc.)
-          </DialogContentText>
+          </DialogTitle>
           {inputList.map((expense, index) => {
             return (
               <div>
@@ -423,16 +442,31 @@ function SavingsRateCalculator() {
         onClose={handleDialogClose}
         aria-labelledby="form-dialog-title"
       >
-        <DialogTitle>Enter Your Information</DialogTitle>
         {stepDisplayed}
       </Dialog>
       {!dialogOpen ? (
-        <Button variant="contained" color="primary" onClick={handleDialogOpen}>
-          Change Income, Contribution, or Expense Information
-        </Button>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginTop: '15px',
+          }}
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleDialogOpen}
+          >
+            Change Income, Contribution, or Expense Information
+          </Button>
+        </div>
       ) : null}
       {!dialogOpen && taxData ? (
-        <div style={{ paddingTop: '70px', textAlign: 'center' }}>
+        <div style={{ paddingTop: '20px', textAlign: 'center' }}>
+          <h4>
+            Your Estimated Yearly Income, Taxes, Expenses, and Retirement
+            Contributions
+          </h4>
           <TableContainer component={Paper}>
             <Table aria-label="simple table">
               <TableBody>
