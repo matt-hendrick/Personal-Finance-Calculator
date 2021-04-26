@@ -11,8 +11,13 @@ function MyTableRow(props) {
         {props.cellTitle}
       </TableCell>
       <TableCell align="left" style={{ borderLeft: '1px solid black' }}>
-        {props.cellNumber}
+        {props.primaryNumber}
       </TableCell>
+      {props.secondaryNumber ? (
+        <TableCell align="left" style={{ borderLeft: '1px solid black' }}>
+          {props.secondaryNumber}
+        </TableCell>
+      ) : null}
     </TableRow>
   );
 }

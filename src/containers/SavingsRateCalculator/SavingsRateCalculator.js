@@ -16,6 +16,9 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
 // Components
@@ -285,18 +288,20 @@ function SavingsRateCalculator() {
             onChange={handleContributionHSAChange}
             placeholder="Enter your personal yearly HSA contribution"
           />
-          <DialogContentText>
-            If under 50, the 401k yearly personal contribution cap is $19,500
-            and the IRA cap is $6,000.
-          </DialogContentText>
-          <DialogContentText>
-            If over 50, the 401k yearly personal contribution cap is $26,000 and
-            the IRA cap is $7,000.
-          </DialogContentText>
-          <DialogContentText>
-            Combined personal-employer HSA yearly contributions are limited to
-            $3,550 (self-only) and $7,100 (family).
-          </DialogContentText>
+          <Container>
+            <DialogContentText>
+              If under 50, the 401k yearly personal contribution cap is $19,500
+              and the IRA cap is $6,000.
+            </DialogContentText>
+            <DialogContentText>
+              If over 50, the 401k yearly personal contribution cap is $26,000
+              and the IRA cap is $7,000.
+            </DialogContentText>
+            <DialogContentText>
+              Combined personal-employer HSA yearly contributions are limited to
+              $3,550 (self-only) and $7,100 (family).
+            </DialogContentText>
+          </Container>
         </DialogContent>
         <DialogActions>
           <Button
@@ -338,14 +343,16 @@ function SavingsRateCalculator() {
             onChange={handleEmployerContributionHSAChange}
             placeholder="Enter your employer's yearly HSA contribution"
           />
-          <DialogContentText>
-            The maximum employer 401k contribution in 2020 is $37,500.
-          </DialogContentText>
+          <Container>
+            <DialogContentText>
+              The maximum employer 401k contribution in 2020 is $37,500.
+            </DialogContentText>
 
-          <DialogContentText>
-            Combined personal-employer HSA yearly contributions are limited to
-            $3,550 (self-only) and $7,100 (family).
-          </DialogContentText>
+            <DialogContentText>
+              Combined personal-employer HSA yearly contributions are limited to
+              $3,550 (self-only) and $7,100 (family).
+            </DialogContentText>
+          </Container>
         </DialogContent>
         <DialogActions>
           <Button
@@ -464,97 +471,142 @@ function SavingsRateCalculator() {
       {!dialogOpen && taxData ? (
         <div style={{ paddingTop: '20px', textAlign: 'center' }}>
           <h4>
-            Your Estimated Yearly Income, Taxes, Expenses, and Retirement
-            Contributions
+            Your Estimated Income, Taxes, Expenses, and Retirement Contributions
           </h4>
           <TableContainer component={Paper}>
             <Table aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Statistic</TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ borderLeft: '1px solid black' }}
+                  >
+                    Yearly
+                  </TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ borderLeft: '1px solid black' }}
+                  >
+                    Monthly
+                  </TableCell>
+                </TableRow>
+              </TableHead>
               <TableBody>
                 <MyTableRow
-                  cellTitle="Gross Yearly Income"
-                  cellNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
+                  cellTitle="Gross Income"
+                  primaryNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
+                  secondaryNumber={`$${(parseInt(yearlyIncome) / 12).toFixed(
+                    2
+                  )}`}
                 />
                 <MyTableRow
                   cellTitle="Federal"
-                  cellNumber={`$${federalTaxes.toFixed(2)}`}
+                  primaryNumber={`$${federalTaxes.toFixed(2)}`}
+                  secondaryNumber={`$${(federalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="FICA"
-                  cellNumber={`$${ficaTaxes.toFixed(2)}`}
+                  primaryNumber={`$${ficaTaxes.toFixed(2)}`}
+                  secondaryNumber={`$${(ficaTaxes / 12).toFixed(2)}`}
                 />
                 {stateTaxes ? (
                   <MyTableRow
                     cellTitle="State"
-                    cellNumber={`$${stateTaxes.toFixed(2)}`}
+                    primaryNumber={`$${stateTaxes.toFixed(2)}`}
+                    secondaryNumber={`$${(stateTaxes / 12).toFixed(2)}`}
                   />
                 ) : (
                   <MyTableRow
                     cellTitle={`No State Taxes in ${selectedState}`}
-                    cellNumber="$0"
+                    primaryNumber="$0"
                   />
                 )}
                 <MyTableRow
-                  cellTitle="Total Yearly Income Tax"
-                  cellNumber={`$${totalTaxes.toFixed(2)}`}
+                  cellTitle="Total Income Tax"
+                  primaryNumber={`$${totalTaxes.toFixed(2)}`}
+                  secondaryNumber={`$${(totalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="Effective Income Tax Rate"
-                  cellNumber={`${((totalTaxes / yearlyIncome) * 100).toFixed(
-                    2
-                  )}%`}
+                  cellTitle="Total Take Home (Pre-Fixed Expenses)"
+                  primaryNumber={`$${totalTakeHome.toFixed(2)}`}
+                  secondaryNumber={`$${(totalTakeHome / 12).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="Total Yearly Take Home (Pre-Fixed Expenses)"
-                  cellNumber={`$${totalTakeHome.toFixed(2)}`}
+                  cellTitle="Total Retirement Contributions"
+                  primaryNumber={`$${parseInt(totalContributions).toFixed(2)}`}
+                  secondaryNumber={`$${(
+                    parseInt(totalContributions) / 12
+                  ).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="Total Yearly Retirement Contributions"
-                  cellNumber={`$${parseInt(totalContributions).toFixed(2)}`}
+                  cellTitle="Take Home (Pre-Fixed Expenses) plus Retirement Contributions"
+                  primaryNumber={`$${(
+                    totalTakeHome + totalContributions
+                  ).toFixed(2)}`}
+                  secondaryNumber={`$${(
+                    (totalTakeHome + totalContributions) /
+                    12
+                  ).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="Yearly Take Home (Pre-Fixed Expenses) plus Retirement Contributions"
-                  cellNumber={`$${(totalTakeHome + totalContributions).toFixed(
-                    2
-                  )}`}
+                  cellTitle="Fixed Expenses"
+                  primaryNumber={`$${totalFixedExpenses.toFixed(2)}`}
+                  secondaryNumber={`$${(totalFixedExpenses / 12).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="Yearly Fixed Expenses"
-                  cellNumber={`$${totalFixedExpenses.toFixed(2)}`}
-                />
-                <MyTableRow
-                  cellTitle="Yearly Take Home After
+                  cellTitle="Take Home After
                   Fixed Expenses (Excluding Retirement Contributions) "
-                  cellNumber={`$${(totalTakeHome - totalFixedExpenses).toFixed(
-                    2
-                  )}`}
+                  primaryNumber={`$${(
+                    totalTakeHome - totalFixedExpenses
+                  ).toFixed(2)}`}
+                  secondaryNumber={`$${(
+                    (totalTakeHome - totalFixedExpenses) /
+                    12
+                  ).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="Yearly Take Home After
+                  cellTitle="Take Home After
                   Fixed Expenses (Including Retirement Contributions) "
-                  cellNumber={`$${(
+                  primaryNumber={`$${(
                     totalTakeHome -
                     totalFixedExpenses +
                     totalContributions
                   ).toFixed(2)}`}
-                />
-                <MyTableRow
-                  cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Excluding Retirement Contributions)"
-                  cellNumber={`${(
-                    ((totalTakeHome - totalFixedExpenses) / totalTakeHome) *
-                    100
-                  ).toFixed(2)}
-                  %`}
-                />
-                <MyTableRow
-                  cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Including Retirement Contributions)"
-                  cellNumber={`${(
-                    ((totalTakeHome - totalFixedExpenses + totalContributions) /
-                      (totalTakeHome + totalContributions)) *
-                    100
-                  ).toFixed(2)}
-                  %`}
+                  secondaryNumber={`$${(
+                    (totalTakeHome - totalFixedExpenses + totalContributions) /
+                    12
+                  ).toFixed(2)}`}
                 />
               </TableBody>
+            </Table>
+          </TableContainer>
+          <h4>Percentages</h4>
+          <TableContainer>
+            <Table>
+              <MyTableRow
+                cellTitle="Effective Income Tax Rate"
+                primaryNumber={`${((totalTaxes / yearlyIncome) * 100).toFixed(
+                  2
+                )}%`}
+              />
+              <MyTableRow
+                cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Excluding Retirement Contributions)"
+                primaryNumber={`${(
+                  ((totalTakeHome - totalFixedExpenses) / totalTakeHome) *
+                  100
+                ).toFixed(2)}
+                  %`}
+              />
+              <MyTableRow
+                cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Including Retirement Contributions)"
+                primaryNumber={`${(
+                  ((totalTakeHome - totalFixedExpenses + totalContributions) /
+                    (totalTakeHome + totalContributions)) *
+                  100
+                ).toFixed(2)}
+                  %`}
+              />
             </Table>
           </TableContainer>
         </div>
