@@ -28,6 +28,7 @@ function SavingsRateCalculator() {
   const [yearlyIncome, setYearlyIncome] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [filingStatus, setFilingStatus] = useState('single');
+  const [age, setAge] = useState('');
   const [taxData, setTaxData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [contribution401k, setContribution401k] = useState('');
@@ -51,6 +52,18 @@ function SavingsRateCalculator() {
     } else return;
   };
 
+  const handleAgeChange = (event) => {
+    if (
+      event.target.value === '' ||
+      (numberRegex.test(event.target.value) &&
+        parseInt(event.target.value) <= 120 &&
+        parseInt(event.target.value) >= 0)
+    ) {
+      const updatedAge = event.target.value;
+      setAge(updatedAge);
+    } else return;
+  };
+
   const handleFilingStatusChange = (event) => {
     const updatedFilingStatus = event.target.value;
     setFilingStatus(updatedFilingStatus);
@@ -62,24 +75,32 @@ function SavingsRateCalculator() {
   };
 
   const handleContribution401kChange = (event) => {
-    if (
-      event.target.value === '' ||
-      (numberRegex.test(event.target.value) &&
-        parseInt(event.target.value) <= 26500)
-    ) {
-      const updatedContribution401k = event.target.value;
-      setContribution401k(updatedContribution401k);
+    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+      if (parseInt(event.target.value) <= 26500 && age >= 50) {
+        const updatedContribution401k = event.target.value;
+        setContribution401k(updatedContribution401k);
+      } else if (parseInt(event.target.value) <= 19500) {
+        const updatedContribution401k = event.target.value;
+        setContribution401k(updatedContribution401k);
+      } else if (event.target.value === '') {
+        const updatedContribution401k = event.target.value;
+        setContribution401k(updatedContribution401k);
+      }
     } else return;
   };
 
   const handleContributionIRAChange = (event) => {
-    if (
-      event.target.value === '' ||
-      (numberRegex.test(event.target.value) &&
-        parseInt(event.target.value) <= 7000)
-    ) {
-      const updatedContributionIRA = event.target.value;
-      setContributionIRA(updatedContributionIRA);
+    if (event.target.value === '' || numberRegex.test(event.target.value)) {
+      if (parseInt(event.target.value) <= 7000 && age >= 50) {
+        const updatedContributionIRA = event.target.value;
+        setContributionIRA(updatedContributionIRA);
+      } else if (parseInt(event.target.value) <= 6000) {
+        const updatedContributionIRA = event.target.value;
+        setContributionIRA(updatedContributionIRA);
+      } else if (parseInt(event.target.value) === '') {
+        const updatedContributionIRA = event.target.value;
+        setContributionIRA(updatedContributionIRA);
+      }
     } else return;
   };
 
@@ -210,8 +231,8 @@ function SavingsRateCalculator() {
         style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}
       >
         <DialogTitle>
-          Enter your yearly gross (pre-tax) income, your state, and your filing
-          status.
+          Enter your yearly gross (pre-tax) income, your state, your filing
+          status, and your age.
         </DialogTitle>
         <TextField
           value={yearlyIncome}
@@ -244,19 +265,28 @@ function SavingsRateCalculator() {
             ],
           }}
         />
+
         <select value={filingStatus} onChange={handleFilingStatusChange}>
           <option value="single">Single</option>
           <option value="married">Married</option>
           <option value="married_separately">Married Separately</option>
           <option value="head_of_household">Head of Household</option>
         </select>
+        <TextField
+          value={age}
+          onChange={handleAgeChange}
+          placeholder="Enter your age"
+          fullWidth
+          autoFocus
+          margin="normal"
+        />
       </DialogContent>
       <DialogActions>
         <Button
           variant="contained"
           color="primary"
           onClick={handleNextDialogStep}
-          disabled={!yearlyIncome || !selectedState}
+          disabled={!yearlyIncome || !selectedState || !age}
         >
           Next
         </Button>
@@ -290,12 +320,12 @@ function SavingsRateCalculator() {
           />
           <Container>
             <DialogContentText>
-              If under 50, the 401k yearly personal contribution cap is $19,500
-              and the IRA cap is $6,000.
+              If you are under 50 years old, the 401k yearly personal
+              contribution cap is $19,500 and the IRA cap is $6,000.
             </DialogContentText>
             <DialogContentText>
-              If over 50, the 401k yearly personal contribution cap is $26,000
-              and the IRA cap is $7,000.
+              If you are over 50 years old, the 401k yearly personal
+              contribution cap is $26,000 and the IRA cap is $7,000.
             </DialogContentText>
             <DialogContentText>
               Combined personal-employer HSA yearly contributions are limited to
