@@ -37,7 +37,15 @@ export default function ButtonAppBar() {
           <Typography variant="h6" className={classes.title}>
             Personal Finance Calculator
           </Typography>
-          <Button color="inherit">Other Button</Button>
+          <Button color="inherit" href="/savingsrate">
+            Savings Rate
+          </Button>
+          <Button color="inherit" href="/taxrate">
+            Tax Rate
+          </Button>
+          <Button color="inherit" href="/compoundinterest">
+            Compount Interest
+          </Button>
         </Toolbar>
       </AppBar>
     </div>

@@ -1,15 +1,27 @@
+// React Router
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+
 // Components
 import Navbar from './components/Navbar/Navbar';
-// import TaxRateCalculator from './containers/TaxRateCalculator/TaxRateCalculator';
 import SavingsRateCalculator from './containers/SavingsRateCalculator/SavingsRateCalculator';
+import CompountInterestCalculator from './containers/CompoundInterestCalculator/CompountInterestCalculator';
+import TaxRateCalculator from './containers/TaxRateCalculator/TaxRateCalculator';
 
 function App() {
   return (
-    <div>
+    <Router>
       <Navbar />
-      <SavingsRateCalculator />
-      {/* <TaxRateCalculator /> */}
-    </div>
+      <Switch>
+        <Route exact path="/" component={SavingsRateCalculator} />
+        <Route exact path="/savingsrate" component={SavingsRateCalculator} />
+        <Route exact path="/taxrate" component={TaxRateCalculator} />
+        <Route
+          exact
+          path="/compoundinterest"
+          component={CompountInterestCalculator}
+        />
+      </Switch>
+    </Router>
   );
 }
 
