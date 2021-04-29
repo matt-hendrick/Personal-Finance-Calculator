@@ -5,12 +5,16 @@ import Container from '@material-ui/core/Container';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 
+// Components
+import MyLineGraph from '../../components/MyLineGraph/MyLineGraph';
+
 function CompountInterestCalculator() {
   const [initialInvestment, setInitialInvestment] = useState('');
   const [monthlyContributions, setMonthlyContributions] = useState('');
   const [years, setYears] = useState('');
   const [interestRate, setInterestRate] = useState('');
   const [result, setResult] = useState('');
+  const [annualTotals, setAnnualTotals] = useState(null);
 
   const numberRegex = /^[0-9\b]+$/;
 
@@ -45,17 +49,17 @@ function CompountInterestCalculator() {
   const calculateRateOfReturn = () => {
     if (initialInvestment && years && interestRate) {
       let endResult = initialInvestment;
+      let tempAnnualTotals = [{ year: 0, annualTotal: endResult }];
       for (let i = 1; i <= years; i++) {
         endResult =
           endResult * (1 + interestRate / 100) + monthlyContributions * 12;
+        tempAnnualTotals.push({
+          year: i,
+          annualTotal: endResult,
+        });
+        setAnnualTotals(tempAnnualTotals);
       }
-      setResult(
-        endResult
-        // initialInvestment * Math.pow(1 + interestRate / 100, years) +
-        //   monthlyContributions * 12 * years
-
-        //   monthlyContributions * (years * 12)
-      );
+      setResult(endResult);
     } else return;
   };
 
@@ -90,13 +94,16 @@ function CompountInterestCalculator() {
           Calculate
         </Button>
       </div>
-      <h1>
-        $
-        {result.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
-      </h1>
+      {result ? (
+        <h1>
+          $
+          {result.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </h1>
+      ) : null}
+      {annualTotals ? <MyLineGraph data={annualTotals} /> : null}
     </Container>
   );
 }
