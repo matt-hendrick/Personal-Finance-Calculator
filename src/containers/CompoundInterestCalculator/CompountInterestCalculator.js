@@ -95,9 +95,15 @@ function CompountInterestCalculator() {
         </Button>
       </div>
       {result ? (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            textAlign: 'center',
+          }}
+        >
           <h1>
-            $
+            Total after {years} years at {interestRate}% interest = $
             {result.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
