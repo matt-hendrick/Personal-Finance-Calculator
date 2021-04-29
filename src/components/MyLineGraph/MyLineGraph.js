@@ -26,7 +26,7 @@ function MyLineGraph(props) {
       </XAxis>
       <YAxis
         tickFormatter={(tick) => {
-          return tick.toLocaleString();
+          return '$' + tick.toLocaleString();
         }}
       />
       <Tooltip

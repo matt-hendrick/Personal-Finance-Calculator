@@ -95,15 +95,21 @@ function CompountInterestCalculator() {
         </Button>
       </div>
       {result ? (
-        <h1>
-          $
-          {result.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <h1>
+            $
+            {result.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </h1>
+        </div>
       ) : null}
-      {annualTotals ? <MyLineGraph data={annualTotals} /> : null}
+      {annualTotals ? (
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <MyLineGraph data={annualTotals} />
+        </div>
+      ) : null}
     </Container>
   );
 }
