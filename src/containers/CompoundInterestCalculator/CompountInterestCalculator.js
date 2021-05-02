@@ -65,12 +65,22 @@ function CompountInterestCalculator() {
 
   return (
     <Container>
-      <div style={{ display: 'flex', flexDirection: 'column', padding: '5px' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '5px',
+          paddingTop: '10px',
+          justifyContent: 'center',
+          margin: 'auto',
+        }}
+      >
         <TextField
           value={initialInvestment}
           onChange={handleInitialInvestmentChange}
           placeholder="Enter your initial investment"
         />
+
         <TextField
           value={monthlyContributions}
           onChange={handleMonthlyContributionsChange}

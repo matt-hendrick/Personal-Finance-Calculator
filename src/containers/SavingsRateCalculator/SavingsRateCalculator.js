@@ -194,7 +194,7 @@ function SavingsRateCalculator() {
     if (yearlyIncome && selectedState) {
       axios
         .get(
-          'http://localhost:5000/personalfinancecalculator/us-central1/app/TaxRates',
+          'https://us-central1-personalfinancecalculator.cloudfunctions.net/app/TaxRates',
           {
             params: params,
           }
@@ -550,6 +550,7 @@ function SavingsRateCalculator() {
                   <MyTableRow
                     cellTitle={`No State Taxes in ${selectedState}`}
                     primaryNumber="$0"
+                    secondaryNumber="$0"
                   />
                 )}
                 <MyTableRow
