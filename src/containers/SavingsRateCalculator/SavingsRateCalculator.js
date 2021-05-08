@@ -31,6 +31,7 @@ function SavingsRateCalculator() {
   const [age, setAge] = useState('');
   const [taxData, setTaxData] = useState(null);
   const [minContribTaxData, setMinContribTaxData] = useState(null);
+  const [maxContribTaxData, setMaxContribTaxData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [contribution401k, setContribution401k] = useState('');
   const [contributionIRA, setContributionIRA] = useState('');
@@ -190,6 +191,15 @@ function SavingsRateCalculator() {
     totalEmployerContributions += parseInt(employerContributionHSA);
   }
 
+  let maxContributionTotal;
+  if (age) {
+    if (age < 50) {
+      maxContributionTotal = 29050;
+    } else {
+      maxContributionTotal = 36550;
+    }
+  }
+
   const calculateTaxRates = () => {
     setLoading(true);
     const params = {
@@ -208,19 +218,38 @@ function SavingsRateCalculator() {
       filing_status: filingStatus,
       state: selectedState,
     };
+    let maxParams = {
+      pay_rate: yearlyIncome - maxContributionTotal,
+      filing_status: filingStatus,
+      state: selectedState,
+    };
+    if (age >= 50) {
+      maxParams = {
+        pay_rate: yearlyIncome - maxContributionTotal,
+        filing_status: filingStatus,
+        state: selectedState,
+      };
+    }
     const requestTwo = axios.get(
       'https://us-central1-personalfinancecalculator.cloudfunctions.net/app/TaxRates',
       {
         params: minParams,
       }
     );
+    const requestThree = axios.get(
+      'https://us-central1-personalfinancecalculator.cloudfunctions.net/app/TaxRates',
+      {
+        params: maxParams,
+      }
+    );
     if (yearlyIncome && selectedState) {
       axios
-        .all([requestOne, requestTwo])
+        .all([requestOne, requestTwo, requestThree])
         .then(
           axios.spread((...responses) => {
             setTaxData(responses[0]?.data?.annual);
             setMinContribTaxData(responses[1]?.data?.annual);
+            setMaxContribTaxData(responses[2]?.data?.annual);
             calculateTotalFixedExpenses();
             setLoading(false);
             setDialogOpen(false);
@@ -262,6 +291,23 @@ function SavingsRateCalculator() {
       minContribTaxData.federal.amount +
       minContribTaxData.state.amount;
     minTotalTakeHome = yearlyIncome - minTotalTaxes;
+  }
+
+  // stores maximum contribution tax rate/takehome in variables
+  let maxFicaTaxes,
+    maxFederalTaxes,
+    maxStateTaxes,
+    maxTotalTaxes,
+    maxTotalTakeHome;
+  if (maxContribTaxData) {
+    maxFicaTaxes = maxContribTaxData.fica.amount;
+    maxFederalTaxes = maxContribTaxData.federal.amount;
+    maxStateTaxes = maxContribTaxData.state.amount;
+    maxTotalTaxes =
+      maxContribTaxData.fica.amount +
+      maxContribTaxData.federal.amount +
+      maxContribTaxData.state.amount;
+    maxTotalTakeHome = yearlyIncome - maxTotalTaxes - maxContributionTotal;
   }
 
   let stepDisplayed = (
@@ -363,7 +409,7 @@ function SavingsRateCalculator() {
               contribution cap is $19,500 and the IRA cap is $6,000.
             </DialogContentText>
             <DialogContentText>
-              If you are over 50 years old, the 401k yearly personal
+              If you are 50 years old or over, the 401k yearly personal
               contribution cap is $26,000 and the IRA cap is $7,000.
             </DialogContentText>
             <DialogContentText>
@@ -537,7 +583,7 @@ function SavingsRateCalculator() {
           </Button>
         </div>
       ) : null}
-      {!dialogOpen && taxData && minContribTaxData ? (
+      {!dialogOpen && taxData && minContribTaxData && maxContribTaxData ? (
         <div style={{ paddingTop: '20px', textAlign: 'center' }}>
           <h4>
             Your Estimated Income, Taxes, Expenses, and Retirement Contributions
@@ -551,13 +597,19 @@ function SavingsRateCalculator() {
                     align="left"
                     style={{ borderLeft: '1px solid black' }}
                   >
-                    Current
+                    With No Personal Retirement Contributions
                   </TableCell>
                   <TableCell
                     align="left"
                     style={{ borderLeft: '1px solid black' }}
                   >
-                    With No Personal Retirement Contributions
+                    Your Current Estimate
+                  </TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ borderLeft: '1px solid black' }}
+                  >
+                    With Max Personal Retirement Contributions
                   </TableCell>
                   {/* <TableCell
                     align="left"
@@ -572,6 +624,7 @@ function SavingsRateCalculator() {
                   cellTitle="Gross Income"
                   baseYearlyNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
                   minYearlyNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
+                  maxYearlyNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
                   monthlyNumber={`$${(parseInt(yearlyIncome) / 12).toFixed(2)}`}
                 />
                 <MyTableRow
@@ -581,6 +634,10 @@ function SavingsRateCalculator() {
                   minNegative={`+$${(minFederalTaxes - federalTaxes).toFixed(
                     2
                   )}`}
+                  maxYearlyNumber={`$${maxFederalTaxes.toFixed(2)}`}
+                  maxPositive={`-$${(federalTaxes - maxFederalTaxes).toFixed(
+                    2
+                  )}`}
                   monthlyNumber={`$${(federalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
@@ -588,6 +645,8 @@ function SavingsRateCalculator() {
                   baseYearlyNumber={`$${ficaTaxes.toFixed(2)}`}
                   minYearlyNumber={`$${minFicaTaxes.toFixed(2)}`}
                   minNegative={`+$${(minFicaTaxes - ficaTaxes).toFixed(2)}`}
+                  maxYearlyNumber={`$${maxFicaTaxes.toFixed(2)}`}
+                  maxPositive={`-$${(ficaTaxes - maxFicaTaxes).toFixed(2)}`}
                   monthlyNumber={`$${(ficaTaxes / 12).toFixed(2)}`}
                 />
                 {stateTaxes ? (
@@ -596,6 +655,8 @@ function SavingsRateCalculator() {
                     baseYearlyNumber={`$${stateTaxes.toFixed(2)}`}
                     minYearlyNumber={`$${minStateTaxes.toFixed(2)}`}
                     minNegative={`+$${(minStateTaxes - stateTaxes).toFixed(2)}`}
+                    maxYearlyNumber={`$${maxStateTaxes.toFixed(2)}`}
+                    maxPositive={`-$${(stateTaxes - maxStateTaxes).toFixed(2)}`}
                     monthlyNumber={`$${(stateTaxes / 12).toFixed(2)}`}
                   />
                 ) : (
@@ -603,6 +664,7 @@ function SavingsRateCalculator() {
                     cellTitle={`No State Taxes in ${selectedState}`}
                     baseYearlyNumber="$0"
                     minYearlyNumber="$0"
+                    maxYearlyNumber="$0"
                     monthlyNumber="$0"
                   />
                 )}
@@ -611,6 +673,8 @@ function SavingsRateCalculator() {
                   baseYearlyNumber={`$${totalTaxes.toFixed(2)}`}
                   minYearlyNumber={`$${minTotalTaxes.toFixed(2)}`}
                   minNegative={`+$${(minTotalTaxes - totalTaxes).toFixed(2)}`}
+                  maxYearlyNumber={`$${maxTotalTaxes.toFixed(2)}`}
+                  maxPositive={`-$${(totalTaxes - maxTotalTaxes).toFixed(2)}`}
                   monthlyNumber={`$${(totalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
@@ -618,6 +682,10 @@ function SavingsRateCalculator() {
                   baseYearlyNumber={`$${totalTakeHome.toFixed(2)}`}
                   minYearlyNumber={`$${minTotalTakeHome.toFixed(2)}`}
                   minPositive={`+$${(minTotalTakeHome - totalTakeHome).toFixed(
+                    2
+                  )}`}
+                  maxYearlyNumber={`$${maxTotalTakeHome.toFixed(2)}`}
+                  maxPositive={`-$${(totalTakeHome - maxTotalTakeHome).toFixed(
                     2
                   )}`}
                   monthlyNumber={`$${(totalTakeHome / 12).toFixed(2)}`}
@@ -634,6 +702,14 @@ function SavingsRateCalculator() {
                   }
                   minNegative={`-$${(
                     parseInt(totalContributions) - totalEmployerContributions
+                  ).toFixed(2)}`}
+                  maxYearlyNumber={`$${
+                    maxContributionTotal + totalEmployerContributions
+                  }`}
+                  maxPositive={`+$${(
+                    maxContributionTotal +
+                    totalEmployerContributions -
+                    parseInt(totalContributions)
                   ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     parseInt(totalContributions) / 12
@@ -652,6 +728,17 @@ function SavingsRateCalculator() {
                     totalContributions -
                     (minTotalTakeHome + totalEmployerContributions)
                   ).toFixed(2)}`}
+                  maxYearlyNumber={`$${(
+                    maxTotalTakeHome +
+                    totalEmployerContributions +
+                    maxContributionTotal
+                  ).toFixed(2)}`}
+                  maxPositive={`+$${(
+                    maxTotalTakeHome +
+                    totalEmployerContributions +
+                    maxContributionTotal -
+                    (totalTakeHome + totalContributions)
+                  ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     (totalTakeHome + totalContributions) /
                     12
@@ -661,6 +748,7 @@ function SavingsRateCalculator() {
                   cellTitle="Fixed Expenses"
                   baseYearlyNumber={`$${totalFixedExpenses.toFixed(2)}`}
                   minYearlyNumber={`$${totalFixedExpenses.toFixed(2)}`}
+                  maxYearlyNumber={`$${totalFixedExpenses.toFixed(2)}`}
                   monthlyNumber={`$${(totalFixedExpenses / 12).toFixed(2)}`}
                 />
                 <MyTableRow
@@ -673,6 +761,12 @@ function SavingsRateCalculator() {
                     minTotalTakeHome - totalFixedExpenses
                   ).toFixed(2)}`}
                   minPositive={`+$${(minTotalTakeHome - totalTakeHome).toFixed(
+                    2
+                  )}`}
+                  maxYearlyNumber={`$${(
+                    maxTotalTakeHome - totalFixedExpenses
+                  ).toFixed(2)}`}
+                  maxNegative={`-$${(totalTakeHome - maxTotalTakeHome).toFixed(
                     2
                   )}`}
                   monthlyNumber={`$${(
@@ -698,6 +792,18 @@ function SavingsRateCalculator() {
                     totalContributions -
                     (minTotalTakeHome + totalEmployerContributions)
                   ).toFixed(2)}`}
+                  maxYearlyNumber={`$${(
+                    maxTotalTakeHome +
+                    totalEmployerContributions +
+                    maxContributionTotal -
+                    totalFixedExpenses
+                  ).toFixed(2)}`}
+                  maxPositive={`+$${(
+                    maxTotalTakeHome +
+                    totalEmployerContributions +
+                    maxContributionTotal -
+                    (totalTakeHome + totalContributions)
+                  ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     (totalTakeHome - totalFixedExpenses + totalContributions) /
                     12
@@ -716,13 +822,19 @@ function SavingsRateCalculator() {
                     align="left"
                     style={{ borderLeft: '1px solid black' }}
                   >
+                    With No Personal Retirement Contributions
+                  </TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ borderLeft: '1px solid black' }}
+                  >
                     Current
                   </TableCell>
                   <TableCell
                     align="left"
                     style={{ borderLeft: '1px solid black' }}
                   >
-                    With No Personal Retirement Contributions
+                    With Max Personal Retirement Contributions
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -738,6 +850,14 @@ function SavingsRateCalculator() {
                 ).toFixed(2)}%`}
                 minNegative={`+${(
                   ((minTotalTaxes - totalTaxes) / yearlyIncome) *
+                  100
+                ).toFixed(2)}%`}
+                maxYearlyNumber={`${(
+                  (maxTotalTaxes / yearlyIncome) *
+                  100
+                ).toFixed(2)}%`}
+                maxPositive={`-${(
+                  ((totalTaxes - maxTotalTaxes) / yearlyIncome) *
                   100
                 ).toFixed(2)}%`}
               />
@@ -756,6 +876,17 @@ function SavingsRateCalculator() {
                 minPositive={`+${(
                   ((minTotalTakeHome - totalFixedExpenses) / minTotalTakeHome -
                     (totalTakeHome - totalFixedExpenses) / totalTakeHome) *
+                  100
+                ).toFixed(2)}%`}
+                maxYearlyNumber={`${(
+                  ((maxTotalTakeHome - totalFixedExpenses) / maxTotalTakeHome) *
+                  100
+                ).toFixed(2)}
+                      %`}
+                maxNegative={`-${(
+                  ((totalTakeHome - totalFixedExpenses) / totalTakeHome -
+                    (maxTotalTakeHome - totalFixedExpenses) /
+                      maxTotalTakeHome) *
                   100
                 ).toFixed(2)}%`}
               />
@@ -782,6 +913,29 @@ function SavingsRateCalculator() {
                       totalEmployerContributions -
                       totalFixedExpenses) /
                       (minTotalTakeHome + totalEmployerContributions)) *
+                  100
+                ).toFixed(2)}%`}
+                maxYearlyNumber={`${(
+                  ((maxTotalTakeHome +
+                    totalEmployerContributions +
+                    maxContributionTotal -
+                    totalFixedExpenses) /
+                    (maxTotalTakeHome +
+                      totalEmployerContributions +
+                      maxContributionTotal)) *
+                  100
+                ).toFixed(2)}
+                        %`}
+                maxPositive={`+${(
+                  ((maxTotalTakeHome +
+                    totalEmployerContributions +
+                    maxContributionTotal -
+                    totalFixedExpenses) /
+                    (maxTotalTakeHome +
+                      totalEmployerContributions +
+                      maxContributionTotal) -
+                    (totalTakeHome - totalFixedExpenses + totalContributions) /
+                      (totalTakeHome + totalContributions)) *
                   100
                 ).toFixed(2)}%`}
               />
