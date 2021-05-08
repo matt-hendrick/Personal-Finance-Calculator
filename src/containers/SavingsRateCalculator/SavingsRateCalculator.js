@@ -179,11 +179,16 @@ function SavingsRateCalculator() {
   if (contributionIRA) totalContributions += parseInt(contributionIRA);
   if (contributionHSA) totalContributions += parseInt(contributionHSA);
   const adjustedIncome = yearlyIncome - parseInt(totalContributions);
-  if (employerContribution401k)
+  let totalEmployerContributions = 0;
+  if (employerContribution401k) {
     totalContributions += parseInt(employerContribution401k);
+    totalEmployerContributions += parseInt(employerContribution401k);
+  }
 
-  if (employerContributionHSA)
+  if (employerContributionHSA) {
     totalContributions += parseInt(employerContributionHSA);
+    totalEmployerContributions += parseInt(employerContributionHSA);
+  }
 
   const calculateTaxRates = () => {
     setLoading(true);
@@ -623,17 +628,12 @@ function SavingsRateCalculator() {
                     2
                   )}`}
                   minYearlyNumber={
-                    employerContribution401k || employerContributionHSA
-                      ? `$${(
-                          parseInt(employerContribution401k) +
-                          parseInt(employerContributionHSA)
-                        ).toFixed(2)}`
+                    totalEmployerContributions > 0
+                      ? `$${totalEmployerContributions.toFixed(2)}`
                       : '$0'
                   }
                   minNegative={`-$${(
-                    parseInt(totalContributions) -
-                    (parseInt(employerContribution401k) +
-                      parseInt(employerContributionHSA))
+                    parseInt(totalContributions) - totalEmployerContributions
                   ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     parseInt(totalContributions) / 12
@@ -645,16 +645,12 @@ function SavingsRateCalculator() {
                     totalTakeHome + totalContributions
                   ).toFixed(2)}`}
                   minYearlyNumber={`$${(
-                    minTotalTakeHome +
-                    parseInt(employerContribution401k) +
-                    parseInt(employerContributionHSA)
+                    minTotalTakeHome + totalEmployerContributions
                   ).toFixed(2)}`}
                   minNegative={`-$${(
                     totalTakeHome +
                     totalContributions -
-                    (minTotalTakeHome +
-                      parseInt(employerContribution401k) +
-                      parseInt(employerContributionHSA))
+                    (minTotalTakeHome + totalEmployerContributions)
                   ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     (totalTakeHome + totalContributions) /
@@ -694,16 +690,13 @@ function SavingsRateCalculator() {
                   ).toFixed(2)}`}
                   minYearlyNumber={`$${(
                     minTotalTakeHome +
-                    parseInt(employerContribution401k) +
-                    parseInt(employerContributionHSA) -
+                    totalEmployerContributions -
                     totalFixedExpenses
                   ).toFixed(2)}`}
                   minNegative={`-$${(
                     totalTakeHome +
                     totalContributions -
-                    (minTotalTakeHome +
-                      parseInt(employerContribution401k) +
-                      parseInt(employerContributionHSA))
+                    (minTotalTakeHome + totalEmployerContributions)
                   ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     (totalTakeHome - totalFixedExpenses + totalContributions) /
@@ -776,12 +769,9 @@ function SavingsRateCalculator() {
                   %`}
                 minYearlyNumber={`${(
                   ((minTotalTakeHome +
-                    parseInt(employerContribution401k) +
-                    parseInt(employerContributionHSA) -
+                    totalEmployerContributions -
                     totalFixedExpenses) /
-                    (minTotalTakeHome +
-                      parseInt(employerContribution401k) +
-                      parseInt(employerContributionHSA))) *
+                    (minTotalTakeHome + totalEmployerContributions)) *
                   100
                 ).toFixed(2)}
                         %`}
@@ -789,12 +779,9 @@ function SavingsRateCalculator() {
                   ((totalTakeHome - totalFixedExpenses + totalContributions) /
                     (totalTakeHome + totalContributions) -
                     (minTotalTakeHome +
-                      parseInt(employerContribution401k) +
-                      parseInt(employerContributionHSA) -
+                      totalEmployerContributions -
                       totalFixedExpenses) /
-                      (minTotalTakeHome +
-                        parseInt(employerContribution401k) +
-                        parseInt(employerContributionHSA))) *
+                      (minTotalTakeHome + totalEmployerContributions)) *
                   100
                 ).toFixed(2)}%`}
               />
