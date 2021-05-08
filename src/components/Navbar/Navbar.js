@@ -40,9 +40,6 @@ export default function ButtonAppBar() {
           <Button color="inherit" href="/savingsrate">
             Savings Rate
           </Button>
-          <Button color="inherit" href="/taxrate">
-            Tax Rate
-          </Button>
           <Button color="inherit" href="/compoundinterest">
             Compount Interest
           </Button>
