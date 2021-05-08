@@ -30,6 +30,7 @@ function SavingsRateCalculator() {
   const [filingStatus, setFilingStatus] = useState('single');
   const [age, setAge] = useState('');
   const [taxData, setTaxData] = useState(null);
+  const [minContribTaxData, setMinContribTaxData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [contribution401k, setContribution401k] = useState('');
   const [contributionIRA, setContributionIRA] = useState('');
@@ -191,20 +192,35 @@ function SavingsRateCalculator() {
       filing_status: filingStatus,
       state: selectedState,
     };
+    const requestOne = axios.get(
+      'https://us-central1-personalfinancecalculator.cloudfunctions.net/app/TaxRates',
+      {
+        params: params,
+      }
+    );
+    const minParams = {
+      pay_rate: yearlyIncome,
+      filing_status: filingStatus,
+      state: selectedState,
+    };
+    const requestTwo = axios.get(
+      'https://us-central1-personalfinancecalculator.cloudfunctions.net/app/TaxRates',
+      {
+        params: minParams,
+      }
+    );
     if (yearlyIncome && selectedState) {
       axios
-        .get(
-          'https://us-central1-personalfinancecalculator.cloudfunctions.net/app/TaxRates',
-          {
-            params: params,
-          }
+        .all([requestOne, requestTwo])
+        .then(
+          axios.spread((...responses) => {
+            setTaxData(responses[0]?.data?.annual);
+            setMinContribTaxData(responses[1]?.data?.annual);
+            calculateTotalFixedExpenses();
+            setLoading(false);
+            setDialogOpen(false);
+          })
         )
-        .then((response) => {
-          setTaxData(response?.data?.annual);
-          calculateTotalFixedExpenses();
-          setLoading(false);
-          setDialogOpen(false);
-        })
         .catch((error) => {
           console.error(error.message);
           setLoading(false);
@@ -215,6 +231,7 @@ function SavingsRateCalculator() {
     }
   };
 
+  // stores current tax rate/takehome in variables
   let ficaTaxes, federalTaxes, stateTaxes, totalTaxes, totalTakeHome;
   if (taxData) {
     ficaTaxes = taxData.fica.amount;
@@ -223,6 +240,23 @@ function SavingsRateCalculator() {
     totalTaxes =
       taxData.fica.amount + taxData.federal.amount + taxData.state.amount;
     totalTakeHome = adjustedIncome - totalTaxes;
+  }
+
+  // stores minimum contribution tax rate/takehome in variables
+  let minFicaTaxes,
+    minFederalTaxes,
+    minStateTaxes,
+    minTotalTaxes,
+    minTotalTakeHome;
+  if (minContribTaxData) {
+    minFicaTaxes = minContribTaxData.fica.amount;
+    minFederalTaxes = minContribTaxData.federal.amount;
+    minStateTaxes = minContribTaxData.state.amount;
+    minTotalTaxes =
+      minContribTaxData.fica.amount +
+      minContribTaxData.federal.amount +
+      minContribTaxData.state.amount;
+    minTotalTakeHome = yearlyIncome - minTotalTaxes;
   }
 
   let stepDisplayed = (
@@ -498,7 +532,7 @@ function SavingsRateCalculator() {
           </Button>
         </div>
       ) : null}
-      {!dialogOpen && taxData ? (
+      {!dialogOpen && taxData && minContribTaxData ? (
         <div style={{ paddingTop: '20px', textAlign: 'center' }}>
           <h4>
             Your Estimated Income, Taxes, Expenses, and Retirement Contributions
@@ -512,86 +546,117 @@ function SavingsRateCalculator() {
                     align="left"
                     style={{ borderLeft: '1px solid black' }}
                   >
-                    Yearly
+                    Current
                   </TableCell>
                   <TableCell
                     align="left"
                     style={{ borderLeft: '1px solid black' }}
                   >
-                    Monthly
+                    With No Personal Retirement Contributions
                   </TableCell>
+                  {/* <TableCell
+                    align="left"
+                    style={{ borderLeft: '1px solid black' }}
+                  >
+                    Monthly
+                  </TableCell> */}
                 </TableRow>
               </TableHead>
               <TableBody>
                 <MyTableRow
                   cellTitle="Gross Income"
-                  primaryNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
-                  secondaryNumber={`$${(parseInt(yearlyIncome) / 12).toFixed(
-                    2
-                  )}`}
+                  baseYearlyNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
+                  minYearlyNumber={`$${parseInt(yearlyIncome).toFixed(2)}`}
+                  monthlyNumber={`$${(parseInt(yearlyIncome) / 12).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="Federal"
-                  primaryNumber={`$${federalTaxes.toFixed(2)}`}
-                  secondaryNumber={`$${(federalTaxes / 12).toFixed(2)}`}
+                  cellTitle="Federal Income Taxes"
+                  baseYearlyNumber={`$${federalTaxes.toFixed(2)}`}
+                  minYearlyNumber={`$${minFederalTaxes.toFixed(2)}`}
+                  monthlyNumber={`$${(federalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
-                  cellTitle="FICA"
-                  primaryNumber={`$${ficaTaxes.toFixed(2)}`}
-                  secondaryNumber={`$${(ficaTaxes / 12).toFixed(2)}`}
+                  cellTitle="FICA Taxes"
+                  baseYearlyNumber={`$${ficaTaxes.toFixed(2)}`}
+                  minYearlyNumber={`$${minFicaTaxes.toFixed(2)}`}
+                  monthlyNumber={`$${(ficaTaxes / 12).toFixed(2)}`}
                 />
                 {stateTaxes ? (
                   <MyTableRow
-                    cellTitle="State"
-                    primaryNumber={`$${stateTaxes.toFixed(2)}`}
-                    secondaryNumber={`$${(stateTaxes / 12).toFixed(2)}`}
+                    cellTitle="State Income Taxes"
+                    baseYearlyNumber={`$${stateTaxes.toFixed(2)}`}
+                    minYearlyNumber={`$${minStateTaxes.toFixed(2)}`}
+                    monthlyNumber={`$${(stateTaxes / 12).toFixed(2)}`}
                   />
                 ) : (
                   <MyTableRow
                     cellTitle={`No State Taxes in ${selectedState}`}
-                    primaryNumber="$0"
-                    secondaryNumber="$0"
+                    baseYearlyNumber="$0"
+                    minYearlyNumber="$0"
+                    monthlyNumber="$0"
                   />
                 )}
                 <MyTableRow
                   cellTitle="Total Income Tax"
-                  primaryNumber={`$${totalTaxes.toFixed(2)}`}
-                  secondaryNumber={`$${(totalTaxes / 12).toFixed(2)}`}
+                  baseYearlyNumber={`$${totalTaxes.toFixed(2)}`}
+                  minYearlyNumber={`$${minTotalTaxes.toFixed(2)}`}
+                  monthlyNumber={`$${(totalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="Total Take Home (Pre-Fixed Expenses)"
-                  primaryNumber={`$${totalTakeHome.toFixed(2)}`}
-                  secondaryNumber={`$${(totalTakeHome / 12).toFixed(2)}`}
+                  baseYearlyNumber={`$${totalTakeHome.toFixed(2)}`}
+                  minYearlyNumber={`$${minTotalTakeHome.toFixed(2)}`}
+                  monthlyNumber={`$${(totalTakeHome / 12).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="Total Retirement Contributions"
-                  primaryNumber={`$${parseInt(totalContributions).toFixed(2)}`}
-                  secondaryNumber={`$${(
+                  baseYearlyNumber={`$${parseInt(totalContributions).toFixed(
+                    2
+                  )}`}
+                  minYearlyNumber={
+                    employerContribution401k || employerContributionHSA
+                      ? `$${(
+                          parseInt(employerContribution401k) +
+                          parseInt(employerContributionHSA)
+                        ).toFixed(2)}`
+                      : '$0'
+                  }
+                  monthlyNumber={`$${(
                     parseInt(totalContributions) / 12
                   ).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="Take Home (Pre-Fixed Expenses) plus Retirement Contributions"
-                  primaryNumber={`$${(
+                  baseYearlyNumber={`$${(
                     totalTakeHome + totalContributions
                   ).toFixed(2)}`}
-                  secondaryNumber={`$${(
+                  minYearlyNumber={`$${(
+                    parseInt(yearlyIncome) +
+                    parseInt(employerContribution401k) +
+                    parseInt(employerContributionHSA) -
+                    minTotalTaxes
+                  ).toFixed(2)}`}
+                  monthlyNumber={`$${(
                     (totalTakeHome + totalContributions) /
                     12
                   ).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="Fixed Expenses"
-                  primaryNumber={`$${totalFixedExpenses.toFixed(2)}`}
-                  secondaryNumber={`$${(totalFixedExpenses / 12).toFixed(2)}`}
+                  baseYearlyNumber={`$${totalFixedExpenses.toFixed(2)}`}
+                  minYearlyNumber={`$${totalFixedExpenses.toFixed(2)}`}
+                  monthlyNumber={`$${(totalFixedExpenses / 12).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="Take Home After
                   Fixed Expenses (Excluding Retirement Contributions) "
-                  primaryNumber={`$${(
+                  baseYearlyNumber={`$${(
                     totalTakeHome - totalFixedExpenses
                   ).toFixed(2)}`}
-                  secondaryNumber={`$${(
+                  minYearlyNumber={`$${(
+                    minTotalTakeHome - totalFixedExpenses
+                  ).toFixed(2)}`}
+                  monthlyNumber={`$${(
                     (totalTakeHome - totalFixedExpenses) /
                     12
                   ).toFixed(2)}`}
@@ -599,12 +664,19 @@ function SavingsRateCalculator() {
                 <MyTableRow
                   cellTitle="Take Home After
                   Fixed Expenses (Including Retirement Contributions) "
-                  primaryNumber={`$${(
+                  baseYearlyNumber={`$${(
                     totalTakeHome -
                     totalFixedExpenses +
                     totalContributions
                   ).toFixed(2)}`}
-                  secondaryNumber={`$${(
+                  minYearlyNumber={`$${(
+                    parseInt(yearlyIncome) +
+                    parseInt(employerContribution401k) +
+                    parseInt(employerContributionHSA) -
+                    minTotalTaxes -
+                    totalFixedExpenses
+                  ).toFixed(2)}`}
+                  monthlyNumber={`$${(
                     (totalTakeHome - totalFixedExpenses + totalContributions) /
                     12
                   ).toFixed(2)}`}
@@ -615,28 +687,68 @@ function SavingsRateCalculator() {
           <h4>Percentages</h4>
           <TableContainer>
             <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Statistic</TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ borderLeft: '1px solid black' }}
+                  >
+                    Current
+                  </TableCell>
+                  <TableCell
+                    align="left"
+                    style={{ borderLeft: '1px solid black' }}
+                  >
+                    With No Personal Retirement Contributions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
               <MyTableRow
                 cellTitle="Effective Income Tax Rate"
-                primaryNumber={`${((totalTaxes / yearlyIncome) * 100).toFixed(
-                  2
-                )}%`}
+                baseYearlyNumber={`${(
+                  (totalTaxes / yearlyIncome) *
+                  100
+                ).toFixed(2)}%`}
+                minYearlyNumber={`${(
+                  (minTotalTaxes / yearlyIncome) *
+                  100
+                ).toFixed(2)}%`}
               />
               <MyTableRow
                 cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Excluding Retirement Contributions)"
-                primaryNumber={`${(
+                baseYearlyNumber={`${(
                   ((totalTakeHome - totalFixedExpenses) / totalTakeHome) *
                   100
                 ).toFixed(2)}
                   %`}
+                minYearlyNumber={`${(
+                  ((minTotalTakeHome - totalFixedExpenses) / minTotalTakeHome) *
+                  100
+                ).toFixed(2)}
+                      %`}
               />
               <MyTableRow
                 cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Including Retirement Contributions)"
-                primaryNumber={`${(
+                baseYearlyNumber={`${(
                   ((totalTakeHome - totalFixedExpenses + totalContributions) /
                     (totalTakeHome + totalContributions)) *
                   100
                 ).toFixed(2)}
                   %`}
+                minYearlyNumber={`${(
+                  ((parseInt(yearlyIncome) +
+                    parseInt(employerContribution401k) +
+                    parseInt(employerContributionHSA) -
+                    minTotalTaxes -
+                    totalFixedExpenses) /
+                    (parseInt(yearlyIncome) +
+                      parseInt(employerContribution401k) +
+                      parseInt(employerContributionHSA) -
+                      minTotalTaxes)) *
+                  100
+                ).toFixed(2)}
+                        %`}
               />
             </Table>
           </TableContainer>

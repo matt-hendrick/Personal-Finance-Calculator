@@ -11,11 +11,16 @@ function MyTableRow(props) {
         {props.cellTitle}
       </TableCell>
       <TableCell align="left" style={{ borderLeft: '1px solid black' }}>
-        {props.primaryNumber}
+        {props.baseYearlyNumber}
       </TableCell>
-      {props.secondaryNumber ? (
+      {/* {props.monthlyNumber ? (
         <TableCell align="left" style={{ borderLeft: '1px solid black' }}>
-          {props.secondaryNumber}
+          {props.monthlyNumber}
+        </TableCell>
+      ) : null} */}
+      {props.minYearlyNumber ? (
+        <TableCell align="left" style={{ borderLeft: '1px solid black' }}>
+          {props.minYearlyNumber}
         </TableCell>
       ) : null}
     </TableRow>
