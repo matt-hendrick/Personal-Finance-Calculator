@@ -573,12 +573,16 @@ function SavingsRateCalculator() {
                   cellTitle="Federal Income Taxes"
                   baseYearlyNumber={`$${federalTaxes.toFixed(2)}`}
                   minYearlyNumber={`$${minFederalTaxes.toFixed(2)}`}
+                  minNegative={`+$${(minFederalTaxes - federalTaxes).toFixed(
+                    2
+                  )}`}
                   monthlyNumber={`$${(federalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="FICA Taxes"
                   baseYearlyNumber={`$${ficaTaxes.toFixed(2)}`}
                   minYearlyNumber={`$${minFicaTaxes.toFixed(2)}`}
+                  minNegative={`+$${(minFicaTaxes - ficaTaxes).toFixed(2)}`}
                   monthlyNumber={`$${(ficaTaxes / 12).toFixed(2)}`}
                 />
                 {stateTaxes ? (
@@ -586,6 +590,7 @@ function SavingsRateCalculator() {
                     cellTitle="State Income Taxes"
                     baseYearlyNumber={`$${stateTaxes.toFixed(2)}`}
                     minYearlyNumber={`$${minStateTaxes.toFixed(2)}`}
+                    minNegative={`+$${(minStateTaxes - stateTaxes).toFixed(2)}`}
                     monthlyNumber={`$${(stateTaxes / 12).toFixed(2)}`}
                   />
                 ) : (
@@ -600,12 +605,16 @@ function SavingsRateCalculator() {
                   cellTitle="Total Income Tax"
                   baseYearlyNumber={`$${totalTaxes.toFixed(2)}`}
                   minYearlyNumber={`$${minTotalTaxes.toFixed(2)}`}
+                  minNegative={`+$${(minTotalTaxes - totalTaxes).toFixed(2)}`}
                   monthlyNumber={`$${(totalTaxes / 12).toFixed(2)}`}
                 />
                 <MyTableRow
                   cellTitle="Total Take Home (Pre-Fixed Expenses)"
                   baseYearlyNumber={`$${totalTakeHome.toFixed(2)}`}
                   minYearlyNumber={`$${minTotalTakeHome.toFixed(2)}`}
+                  minPositive={`+$${(minTotalTakeHome - totalTakeHome).toFixed(
+                    2
+                  )}`}
                   monthlyNumber={`$${(totalTakeHome / 12).toFixed(2)}`}
                 />
                 <MyTableRow
@@ -621,6 +630,11 @@ function SavingsRateCalculator() {
                         ).toFixed(2)}`
                       : '$0'
                   }
+                  minNegative={`-$${(
+                    parseInt(totalContributions) -
+                    (parseInt(employerContribution401k) +
+                      parseInt(employerContributionHSA))
+                  ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     parseInt(totalContributions) / 12
                   ).toFixed(2)}`}
@@ -631,10 +645,16 @@ function SavingsRateCalculator() {
                     totalTakeHome + totalContributions
                   ).toFixed(2)}`}
                   minYearlyNumber={`$${(
-                    parseInt(yearlyIncome) +
+                    minTotalTakeHome +
                     parseInt(employerContribution401k) +
-                    parseInt(employerContributionHSA) -
-                    minTotalTaxes
+                    parseInt(employerContributionHSA)
+                  ).toFixed(2)}`}
+                  minNegative={`-$${(
+                    totalTakeHome +
+                    totalContributions -
+                    (minTotalTakeHome +
+                      parseInt(employerContribution401k) +
+                      parseInt(employerContributionHSA))
                   ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     (totalTakeHome + totalContributions) /
@@ -656,6 +676,9 @@ function SavingsRateCalculator() {
                   minYearlyNumber={`$${(
                     minTotalTakeHome - totalFixedExpenses
                   ).toFixed(2)}`}
+                  minPositive={`+$${(minTotalTakeHome - totalTakeHome).toFixed(
+                    2
+                  )}`}
                   monthlyNumber={`$${(
                     (totalTakeHome - totalFixedExpenses) /
                     12
@@ -670,11 +693,17 @@ function SavingsRateCalculator() {
                     totalContributions
                   ).toFixed(2)}`}
                   minYearlyNumber={`$${(
-                    parseInt(yearlyIncome) +
+                    minTotalTakeHome +
                     parseInt(employerContribution401k) +
                     parseInt(employerContributionHSA) -
-                    minTotalTaxes -
                     totalFixedExpenses
+                  ).toFixed(2)}`}
+                  minNegative={`-$${(
+                    totalTakeHome +
+                    totalContributions -
+                    (minTotalTakeHome +
+                      parseInt(employerContribution401k) +
+                      parseInt(employerContributionHSA))
                   ).toFixed(2)}`}
                   monthlyNumber={`$${(
                     (totalTakeHome - totalFixedExpenses + totalContributions) /
@@ -714,6 +743,10 @@ function SavingsRateCalculator() {
                   (minTotalTaxes / yearlyIncome) *
                   100
                 ).toFixed(2)}%`}
+                minNegative={`+${(
+                  ((minTotalTaxes - totalTaxes) / yearlyIncome) *
+                  100
+                ).toFixed(2)}%`}
               />
               <MyTableRow
                 cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Excluding Retirement Contributions)"
@@ -727,6 +760,11 @@ function SavingsRateCalculator() {
                   100
                 ).toFixed(2)}
                       %`}
+                minPositive={`+${(
+                  ((minTotalTakeHome - totalFixedExpenses) / minTotalTakeHome -
+                    (totalTakeHome - totalFixedExpenses) / totalTakeHome) *
+                  100
+                ).toFixed(2)}%`}
               />
               <MyTableRow
                 cellTitle="Max Potential Savings Rate After Taxes and Fixed Expenses (Including Retirement Contributions)"
@@ -737,18 +775,28 @@ function SavingsRateCalculator() {
                 ).toFixed(2)}
                   %`}
                 minYearlyNumber={`${(
-                  ((parseInt(yearlyIncome) +
+                  ((minTotalTakeHome +
                     parseInt(employerContribution401k) +
                     parseInt(employerContributionHSA) -
-                    minTotalTaxes -
                     totalFixedExpenses) /
-                    (parseInt(yearlyIncome) +
+                    (minTotalTakeHome +
                       parseInt(employerContribution401k) +
-                      parseInt(employerContributionHSA) -
-                      minTotalTaxes)) *
+                      parseInt(employerContributionHSA))) *
                   100
                 ).toFixed(2)}
                         %`}
+                minNegative={`-${(
+                  ((totalTakeHome - totalFixedExpenses + totalContributions) /
+                    (totalTakeHome + totalContributions) -
+                    (minTotalTakeHome +
+                      parseInt(employerContribution401k) +
+                      parseInt(employerContributionHSA) -
+                      totalFixedExpenses) /
+                      (minTotalTakeHome +
+                        parseInt(employerContribution401k) +
+                        parseInt(employerContributionHSA))) *
+                  100
+                ).toFixed(2)}%`}
               />
             </Table>
           </TableContainer>

@@ -20,7 +20,13 @@ function MyTableRow(props) {
       ) : null} */}
       {props.minYearlyNumber ? (
         <TableCell align="left" style={{ borderLeft: '1px solid black' }}>
-          {props.minYearlyNumber}
+          {props.minYearlyNumber}{' '}
+          {props.minNegative ? (
+            <span style={{ color: 'red' }}>({props.minNegative})</span>
+          ) : null}
+          {props.minPositive ? (
+            <span style={{ color: 'green' }}>({props.minPositive})</span>
+          ) : null}
         </TableCell>
       ) : null}
     </TableRow>

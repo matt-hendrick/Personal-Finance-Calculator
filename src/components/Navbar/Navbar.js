@@ -41,7 +41,7 @@ export default function ButtonAppBar() {
             Savings Rate
           </Button>
           <Button color="inherit" href="/compoundinterest">
-            Compount Interest
+            Compound Interest
           </Button>
         </Toolbar>
       </AppBar>
