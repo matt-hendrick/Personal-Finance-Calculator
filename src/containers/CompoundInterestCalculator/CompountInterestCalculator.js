@@ -7,6 +7,7 @@ import TextField from '@material-ui/core/TextField';
 
 // Components
 import MyLineGraph from '../../components/MyLineGraph/MyLineGraph';
+import { Typography } from '@material-ui/core';
 
 function CompountInterestCalculator() {
   const [initialInvestment, setInitialInvestment] = useState('');
@@ -75,6 +76,9 @@ function CompountInterestCalculator() {
           margin: 'auto',
         }}
       >
+        <Typography variant="h5" align="center">
+          Fill out the fields below to calculate compound interest
+        </Typography>
         <TextField
           value={initialInvestment}
           onChange={handleInitialInvestmentChange}
