@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Navbar from './components/Navbar/Navbar';
 import SavingsRateCalculator from './containers/SavingsRateCalculator/SavingsRateCalculator';
 import CompountInterestCalculator from './containers/CompoundInterestCalculator/CompountInterestCalculator';
+import D3Render from './containers/MonteCarlo/D3render';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           path="/compoundinterest"
           component={CompountInterestCalculator}
         />
+        <Route exact path="/stocksim" component={D3Render} />
       </Switch>
     </Router>
   );
