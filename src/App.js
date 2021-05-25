@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 // Components
 import Navbar from './components/Navbar/Navbar';
 import SavingsRateCalculator from './containers/SavingsRateCalculator/SavingsRateCalculator';
-import CompountInterestCalculator from './containers/CompoundInterestCalculator/CompountInterestCalculator';
+import CompoundInterestCalculator from './containers/CompoundInterestCalculator/CompoundInterestCalculator';
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
         <Route
           exact
           path="/compoundinterest"
-          component={CompountInterestCalculator}
+          component={CompoundInterestCalculator}
         />
       </Switch>
     </Router>

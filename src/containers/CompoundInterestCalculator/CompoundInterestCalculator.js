@@ -9,7 +9,7 @@ import TextField from '@material-ui/core/TextField';
 import MyLineGraph from '../../components/MyLineGraph/MyLineGraph';
 import { Typography } from '@material-ui/core';
 
-function CompountInterestCalculator() {
+function CompoundInterestCalculator() {
   const [initialInvestment, setInitialInvestment] = useState('');
   const [monthlyContributions, setMonthlyContributions] = useState('');
   const [years, setYears] = useState('');
@@ -134,4 +134,4 @@ function CompountInterestCalculator() {
   );
 }
 
-export default CompountInterestCalculator;
+export default CompoundInterestCalculator;
