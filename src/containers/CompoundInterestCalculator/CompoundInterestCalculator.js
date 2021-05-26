@@ -98,7 +98,7 @@ function CompoundInterestCalculator() {
         <TextField
           value={interestRate}
           onChange={handleInterestRateChange}
-          placeholder="Enter the estimated interest rate"
+          placeholder="Enter your estimated interest rate"
         />
         <Button
           color="primary"
