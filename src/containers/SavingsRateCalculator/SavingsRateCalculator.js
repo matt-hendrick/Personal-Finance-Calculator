@@ -495,7 +495,7 @@ function SavingsRateCalculator() {
         <DialogContent>
           <DialogTitle>
             Enter your yearly fixed expenses (housing, utilities, debt payments,
-            food, transportation, subscriptions, etc.)
+            food, transportation, subscriptions, etc.).
           </DialogTitle>
           {inputList.map((expense, index) => {
             return (
@@ -611,12 +611,6 @@ function SavingsRateCalculator() {
                   >
                     With Max Personal Retirement Contributions
                   </TableCell>
-                  {/* <TableCell
-                    align="left"
-                    style={{ borderLeft: '1px solid black' }}
-                  >
-                    Monthly
-                  </TableCell> */}
                 </TableRow>
               </TableHead>
               <TableBody>
